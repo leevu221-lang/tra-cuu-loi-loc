@@ -53,6 +53,25 @@
           <span class="btn-text">Đồng bộ</span>
         </button>
 
+        <!-- Device Mode Switcher (Desktop & Mobile Preview) -->
+        <div class="device-switch-wrap" id="deviceSwitchWrap" title="Chuyển đổi giao diện Desktop / Mobile">
+          <button type="button" class="btn-device-switch active" id="btnSwitchDesktop" title="Xem giao diện Desktop đầy đủ">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="device-icon">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span class="device-label">Desktop</span>
+          </button>
+          <button type="button" class="btn-device-switch" id="btnSwitchMobile" title="Xem mô phỏng Mobile (Tương thích Android & iOS)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="device-icon">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <span class="device-label">Mobile</span>
+          </button>
+        </div>
+
         <!-- Theme Toggle -->
         <button class="btn btn-icon" id="btnThemeToggle" title="Chuyển chế độ sáng/tối">
           <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -786,6 +805,96 @@
             Khôi Phục Chuẩn (10% - 15% - 20% - 25%)
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Device Simulator Modal (Mô Phỏng Trực Quan Mọi Dòng Máy Android & iOS) -->
+  <div class="sim-modal-overlay" id="simModalOverlay" style="display: none;">
+    <div class="sim-top-toolbar">
+      <div class="sim-toolbar-left">
+        <div class="sim-title-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sim-badge-icon">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          <span>Mô Phỏng Mobile</span>
+        </div>
+        <div class="sim-control-group">
+          <label for="selectSimDevice" class="sim-label">Thiết bị:</label>
+          <select id="selectSimDevice" class="sim-select">
+            <option value="iphone15" data-w="393" data-h="852" data-os="ios">🍎 iPhone 15 / 16 Pro (393 × 852 px)</option>
+            <option value="iphone13" data-w="390" data-h="844" data-os="ios" selected>🍎 iPhone 13 / 14 / 12 (390 × 844 px)</option>
+            <option value="galaxyS24" data-w="412" data-h="915" data-os="android">🤖 Samsung Galaxy S24 / S23 (412 × 915 px)</option>
+            <option value="xiaomiRedmi" data-w="360" data-h="800" data-os="android">🤖 Xiaomi Redmi / Galaxy A (360 × 800 px)</option>
+            <option value="iphoneSE" data-w="375" data-h="667" data-os="ios">🍎 iPhone SE / Compact (375 × 667 px)</option>
+          </select>
+        </div>
+        <div class="sim-control-group">
+          <label for="selectSimScale" class="sim-label">Tỷ lệ:</label>
+          <select id="selectSimScale" class="sim-select sim-select-sm">
+            <option value="auto" selected>Vừa màn hình (Auto)</option>
+            <option value="1">100%</option>
+            <option value="0.9">90%</option>
+            <option value="0.85">85%</option>
+            <option value="0.75">75%</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sim-toolbar-right">
+        <button type="button" class="btn-sim-action" id="btnSimRotate" title="Xoay dọc / ngang màn hình">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sim-action-icon">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          <span id="labelSimRotate">Dọc</span>
+        </button>
+        <button type="button" class="btn-sim-action" id="btnSimReload" title="Tải lại trang mô phỏng">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sim-action-icon">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Tải lại</span>
+        </button>
+        <button type="button" class="btn-sim-close" id="btnCloseSimulator" title="Quay lại giao diện Desktop (Hoặc phím ESC)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sim-action-icon">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Trở về Desktop</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Realistic Phone Shell Container -->
+    <div class="sim-viewport-stage" id="simViewportStage">
+      <div class="sim-phone-chassis os-ios" id="simPhoneChassis">
+        <!-- Physical buttons simulation -->
+        <div class="sim-phone-btn sim-btn-vol-up"></div>
+        <div class="sim-phone-btn sim-btn-vol-down"></div>
+        <div class="sim-phone-btn sim-btn-power"></div>
+
+        <!-- Phone Screen Wrapper -->
+        <div class="sim-phone-screen-wrap" id="simPhoneScreenWrap">
+          <!-- Notch / Dynamic Island -->
+          <div class="sim-phone-notch" id="simPhoneNotch">
+            <div class="sim-notch-pill">
+              <span class="sim-cam-lens"></span>
+              <span class="sim-sensor-dot"></span>
+            </div>
+          </div>
+          <!-- Home Indicator (iOS) -->
+          <div class="sim-home-bar" id="simHomeBar"></div>
+
+          <!-- Embedded Mobile iFrame -->
+          <iframe id="simIframe" class="sim-iframe" src="about:blank"></iframe>
+        </div>
+      </div>
+
+      <!-- Dimension & Device Info Tag -->
+      <div class="sim-dim-caption" id="simDimCaption">
+        📱 Đang mô phỏng: <strong id="simCurrentDeviceName">iPhone 13 / 14 / 12</strong> (390 × 844 px)
       </div>
     </div>
   </div>

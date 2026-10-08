@@ -165,7 +165,24 @@ const DOM = {
 
   // Theme
   btnThemeToggle: document.getElementById('btnThemeToggle'),
-  toastContainer: document.getElementById('toastContainer')
+  toastContainer: document.getElementById('toastContainer'),
+
+  // Device Mode Switcher & Mobile Simulator
+  deviceSwitchWrap: document.getElementById('deviceSwitchWrap'),
+  btnSwitchDesktop: document.getElementById('btnSwitchDesktop'),
+  btnSwitchMobile: document.getElementById('btnSwitchMobile'),
+  simModalOverlay: document.getElementById('simModalOverlay'),
+  selectSimDevice: document.getElementById('selectSimDevice'),
+  selectSimScale: document.getElementById('selectSimScale'),
+  btnSimRotate: document.getElementById('btnSimRotate'),
+  labelSimRotate: document.getElementById('labelSimRotate'),
+  btnSimReload: document.getElementById('btnSimReload'),
+  btnCloseSimulator: document.getElementById('btnCloseSimulator'),
+  simPhoneChassis: document.getElementById('simPhoneChassis'),
+  simPhoneScreenWrap: document.getElementById('simPhoneScreenWrap'),
+  simIframe: document.getElementById('simIframe'),
+  simCurrentDeviceName: document.getElementById('simCurrentDeviceName'),
+  simDimCaption: document.getElementById('simDimCaption')
 };
 
 // Utilities
@@ -222,6 +239,13 @@ function playScanChime() {
 // ==========================================
 
 async function initData() {
+  // Check URL parameters for ?embed=1 and ?code=...
+  const urlParams = new URLSearchParams(window.location.search);
+  const isEmbed = urlParams.get('embed') === '1' || window.self !== window.top;
+  if (isEmbed) {
+    document.body.classList.add('is-embedded');
+  }
+
   // Load saved local promotions if exists
   loadSavedPromotions();
 
@@ -239,6 +263,17 @@ async function initData() {
       }
     } catch (err) {
       console.warn('Local data.json fetch error:', err);
+    }
+  }
+
+  // If specific product code passed in URL, load it automatically
+  const paramCode = urlParams.get('code');
+  if (paramCode && State.products?.length > 0) {
+    const prod = lookupProduct(paramCode);
+    if (prod) {
+      displayProduct(prod);
+      DOM.searchInput.value = paramCode;
+      DOM.btnClearSearch.style.display = 'flex';
     }
   }
 
@@ -1189,6 +1224,81 @@ function resetPromoDefaults() {
 }
 
 // ==========================================
+// MOBILE DEVICE SIMULATOR CONTROLLER
+// ==========================================
+
+let simIsLandscape = false;
+
+function openMobileSimulator() {
+  if (!DOM.simModalOverlay) return;
+  // If already running inside iframe, don't open recursive modal
+  if (window.self !== window.top || document.body.classList.contains('is-embedded')) return;
+
+  const currentCode = State.currentProduct?.code || (DOM.searchInput?.value.trim() || '1114171000203');
+  const targetUrl = `index.html?code=${encodeURIComponent(currentCode)}&embed=1`;
+
+  DOM.simIframe.src = targetUrl;
+  DOM.simModalOverlay.style.display = 'flex';
+  DOM.btnSwitchMobile?.classList.add('active');
+  DOM.btnSwitchDesktop?.classList.remove('active');
+
+  updateSimulatorDimensions();
+}
+
+function closeMobileSimulator() {
+  if (!DOM.simModalOverlay) return;
+  DOM.simModalOverlay.style.display = 'none';
+  DOM.simIframe.src = 'about:blank';
+  DOM.btnSwitchDesktop?.classList.add('active');
+  DOM.btnSwitchMobile?.classList.remove('active');
+}
+
+function updateSimulatorDimensions() {
+  if (!DOM.selectSimDevice || !DOM.simPhoneScreenWrap || !DOM.simPhoneChassis) return;
+
+  const selectedOpt = DOM.selectSimDevice.options[DOM.selectSimDevice.selectedIndex];
+  if (!selectedOpt) return;
+
+  let baseW = parseInt(selectedOpt.getAttribute('data-w'), 10) || 390;
+  let baseH = parseInt(selectedOpt.getAttribute('data-h'), 10) || 844;
+  const os = selectedOpt.getAttribute('data-os') || 'ios';
+
+  let w = simIsLandscape ? baseH : baseW;
+  let h = simIsLandscape ? baseW : baseH;
+
+  DOM.simPhoneScreenWrap.style.width = `${w}px`;
+  DOM.simPhoneScreenWrap.style.height = `${h}px`;
+
+  DOM.simPhoneChassis.classList.remove('os-ios', 'os-android');
+  DOM.simPhoneChassis.classList.add(`os-${os}`);
+
+  // Calculate Auto Scale so the entire phone comfortably fits in viewport stage
+  const scaleSelectVal = DOM.selectSimScale?.value || 'auto';
+  let scale = 1;
+
+  if (scaleSelectVal === 'auto') {
+    const availableH = Math.max(300, window.innerHeight - 56 - 60); // 56px toolbar + 60px padding/caption
+    const availableW = Math.max(300, window.innerWidth - 40);
+    const scaleH = availableH / (h + 24); // chassis border
+    const scaleW = availableW / (w + 24);
+    scale = Math.min(1, scaleH, scaleW);
+    scale = Math.max(0.45, Math.min(1, scale));
+  } else {
+    scale = parseFloat(scaleSelectVal) || 1;
+  }
+
+  DOM.simPhoneChassis.style.transform = `scale(${scale.toFixed(3)})`;
+
+  if (DOM.simCurrentDeviceName) {
+    DOM.simCurrentDeviceName.textContent = selectedOpt.textContent.split('(')[0].trim();
+  }
+  if (DOM.simDimCaption) {
+    const orientText = simIsLandscape ? 'Ngang' : 'Dọc';
+    DOM.simDimCaption.innerHTML = `📱 Đang mô phỏng: <strong>${selectedOpt.textContent.split('(')[0].trim()}</strong> (${w} × ${h} px - ${orientText}) - Tỷ lệ hiển thị: ${Math.round(scale * 100)}%`;
+  }
+}
+
+// ==========================================
 // EVENT LISTENERS
 // ==========================================
 
@@ -1369,6 +1479,47 @@ function setupEventListeners() {
     const isDark = document.body.classList.toggle('theme-dark');
     document.body.classList.toggle('theme-light', !isDark);
     localStorage.setItem('tra_cuu_theme', isDark ? 'dark' : 'light');
+  });
+
+  // Device Mode Switcher & Mobile Simulator
+  if (DOM.btnSwitchMobile) {
+    DOM.btnSwitchMobile.addEventListener('click', openMobileSimulator);
+  }
+  if (DOM.btnSwitchDesktop) {
+    DOM.btnSwitchDesktop.addEventListener('click', closeMobileSimulator);
+  }
+  if (DOM.btnCloseSimulator) {
+    DOM.btnCloseSimulator.addEventListener('click', closeMobileSimulator);
+  }
+  if (DOM.selectSimDevice) {
+    DOM.selectSimDevice.addEventListener('change', updateSimulatorDimensions);
+  }
+  if (DOM.selectSimScale) {
+    DOM.selectSimScale.addEventListener('change', updateSimulatorDimensions);
+  }
+  if (DOM.btnSimRotate) {
+    DOM.btnSimRotate.addEventListener('click', () => {
+      simIsLandscape = !simIsLandscape;
+      if (DOM.labelSimRotate) DOM.labelSimRotate.textContent = simIsLandscape ? 'Ngang' : 'Dọc';
+      updateSimulatorDimensions();
+    });
+  }
+  if (DOM.btnSimReload) {
+    DOM.btnSimReload.addEventListener('click', () => {
+      if (DOM.simIframe?.contentWindow) {
+        DOM.simIframe.contentWindow.location.reload();
+      }
+    });
+  }
+  window.addEventListener('resize', () => {
+    if (DOM.simModalOverlay && DOM.simModalOverlay.style.display !== 'none' && DOM.selectSimScale?.value === 'auto') {
+      updateSimulatorDimensions();
+    }
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && DOM.simModalOverlay && DOM.simModalOverlay.style.display !== 'none') {
+      closeMobileSimulator();
+    }
   });
 
   // Restore saved theme
