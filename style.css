@@ -778,9 +778,10 @@ body.theme-dark #btnThemeToggle .icon-moon { display: none; }
 }
 
 /* ==========================================
-   PRODUCT INFO PANEL (RESPONSIVE)
+   PRODUCT INFO PANEL (RESPONSIVE) - ẨN THEO YÊU CẦU
    ========================================== */
 .product-info-panel {
+  display: none !important;
   background: var(--bg-surface);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-xl);
