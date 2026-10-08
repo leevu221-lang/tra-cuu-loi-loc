@@ -260,12 +260,37 @@
             <span class="section-sub">Bao gồm công thợ lắp đặt tận nhà + lõi lọc chính hãng 100%</span>
           </div>
 
+          <!-- Promotion Banner & Live Settings Bar -->
+          <div class="promo-banner-wrap" id="promoBannerWrap">
+            <div class="promo-banner-left">
+              <span class="promo-badge-fire">🔥 KHUYẾN MÃI</span>
+              <div class="promo-title-group">
+                <span class="promo-name-text" id="promoTitleText">Ưu Đãi Đặc Biệt: Giảm Từ 10% Đến 25%</span>
+                <span class="promo-sub-text">Áp dụng trực tiếp vào đơn giá thay lõi trọn gói</span>
+              </div>
+            </div>
+            <div class="promo-banner-right">
+              <label class="promo-switch-label" title="Bật hoặc tắt áp dụng giảm giá khuyến mãi">
+                <input type="checkbox" id="togglePromoActive" checked />
+                <span class="switch-slider"></span>
+                <span class="switch-text">Bật khuyến mãi</span>
+              </label>
+              <button class="btn btn-secondary btn-xs btn-promo-edit" id="btnOpenPromoSettings" title="Tùy chỉnh % giảm giá của từng gói">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Cài đặt khuyến mãi
+              </button>
+            </div>
+          </div>
+
           <!-- 4 Cards Grid -->
           <div class="year-cards-grid">
             
             <!-- Card Year 1 -->
             <div class="year-card" id="cardYear1">
-              <div class="card-badge">Kỳ Hạn Ngắn</div>
+              <div class="card-badge-row">
+                <span class="card-badge">Kỳ Hạn Ngắn</span>
+                <span class="card-discount-tag" id="tagY1Discount">-10%</span>
+              </div>
               <div class="card-header">
                 <h4 class="card-year-title">Gói 1 Năm</h4>
                 <div class="cores-pill">
@@ -274,11 +299,19 @@
                 </div>
               </div>
               <div class="card-body">
+                <!-- Original Strike-through Price -->
+                <div class="old-price-line" id="wrapY1OldPrice">
+                  <span class="old-label">Giá gốc:</span>
+                  <del class="old-price" id="resY1OldPrice">400.000 ₫</del>
+                </div>
+                <!-- Final Discounted Price -->
                 <div class="card-price-wrap">
-                  <span class="price-figure" id="resY1Price">400.000</span>
+                  <span class="price-figure" id="resY1Price">360.000</span>
                   <span class="currency">₫</span>
                 </div>
-                <div class="price-subtext" id="resY1Avg">~100.000 ₫/lõi</div>
+                <!-- Savings tag -->
+                <div class="save-tag" id="resY1Save">Tiết kiệm 40.000 ₫</div>
+                <div class="price-subtext" id="resY1Avg">~90.000 ₫/lõi</div>
                 <ul class="card-features">
                   <li>✓ Thay thế định kỳ năm đầu</li>
                   <li>✓ Miễn phí công thợ ĐMX tới nhà</li>
@@ -289,7 +322,10 @@
 
             <!-- Card Year 2 -->
             <div class="year-card highlight-card" id="cardYear2">
-              <div class="card-badge badge-popular">Phổ Biến Nhất</div>
+              <div class="card-badge-row">
+                <span class="card-badge badge-popular">Phổ Biến Nhất</span>
+                <span class="card-discount-tag tag-popular" id="tagY2Discount">-15%</span>
+              </div>
               <div class="card-header">
                 <h4 class="card-year-title">Gói 2 Năm</h4>
                 <div class="cores-pill">
@@ -298,11 +334,19 @@
                 </div>
               </div>
               <div class="card-body">
+                <!-- Original Strike-through Price -->
+                <div class="old-price-line" id="wrapY2OldPrice">
+                  <span class="old-label">Giá gốc:</span>
+                  <del class="old-price" id="resY2OldPrice">841.000 ₫</del>
+                </div>
+                <!-- Final Discounted Price -->
                 <div class="card-price-wrap">
-                  <span class="price-figure" id="resY2Price">841.000</span>
+                  <span class="price-figure" id="resY2Price">714.850</span>
                   <span class="currency">₫</span>
                 </div>
-                <div class="price-subtext" id="resY2Avg">~420.500 ₫/năm</div>
+                <!-- Savings tag -->
+                <div class="save-tag" id="resY2Save">Tiết kiệm 126.150 ₫</div>
+                <div class="price-subtext" id="resY2Avg">~357.400 ₫/năm</div>
                 <ul class="card-features">
                   <li>✓ Bảo dưỡng toàn diện 24 tháng</li>
                   <li>✓ Đầy đủ các đợt thay thô & chức năng</li>
@@ -313,7 +357,10 @@
 
             <!-- Card Year 3 -->
             <div class="year-card" id="cardYear3">
-              <div class="card-badge">Tối Ưu RO</div>
+              <div class="card-badge-row">
+                <span class="card-badge">Tối Ưu RO</span>
+                <span class="card-discount-tag" id="tagY3Discount">-20%</span>
+              </div>
               <div class="card-header">
                 <h4 class="card-year-title">Gói 3 Năm</h4>
                 <div class="cores-pill">
@@ -322,11 +369,19 @@
                 </div>
               </div>
               <div class="card-body">
+                <!-- Original Strike-through Price -->
+                <div class="old-price-line" id="wrapY3OldPrice">
+                  <span class="old-label">Giá gốc:</span>
+                  <del class="old-price" id="resY3OldPrice">1.338.000 ₫</del>
+                </div>
+                <!-- Final Discounted Price -->
                 <div class="card-price-wrap">
-                  <span class="price-figure" id="resY3Price">1.338.000</span>
+                  <span class="price-figure" id="resY3Price">1.070.400</span>
                   <span class="currency">₫</span>
                 </div>
-                <div class="price-subtext" id="resY3Avg">~446.000 ₫/năm</div>
+                <!-- Savings tag -->
+                <div class="save-tag" id="resY3Save">Tiết kiệm 267.600 ₫</div>
+                <div class="price-subtext" id="resY3Avg">~356.800 ₫/năm</div>
                 <ul class="card-features">
                   <li>✓ Bao trọn chu kỳ màng RO trái tim máy</li>
                   <li>✓ Tiết kiệm chi phí so với mua lẻ</li>
@@ -337,7 +392,10 @@
 
             <!-- Card Year 4 -->
             <div class="year-card premium-card" id="cardYear4">
-              <div class="card-badge badge-premium">Trọn Đời Máy</div>
+              <div class="card-badge-row">
+                <span class="card-badge badge-premium">Trọn Đời Máy</span>
+                <span class="card-discount-tag tag-premium" id="tagY4Discount">-25%</span>
+              </div>
               <div class="card-header">
                 <h4 class="card-year-title">Gói 4 Năm</h4>
                 <div class="cores-pill">
@@ -346,11 +404,19 @@
                 </div>
               </div>
               <div class="card-body">
+                <!-- Original Strike-through Price -->
+                <div class="old-price-line" id="wrapY4OldPrice">
+                  <span class="old-label">Giá gốc:</span>
+                  <del class="old-price" id="resY4OldPrice">1.880.000 ₫</del>
+                </div>
+                <!-- Final Discounted Price -->
                 <div class="card-price-wrap">
-                  <span class="price-figure" id="resY4Price">1.880.000</span>
+                  <span class="price-figure" id="resY4Price">1.410.000</span>
                   <span class="currency">₫</span>
                 </div>
-                <div class="price-subtext" id="resY4Avg">~470.000 ₫/năm</div>
+                <!-- Savings tag -->
+                <div class="save-tag" id="resY4Save">Tiết kiệm 470.000 ₫</div>
+                <div class="price-subtext" id="resY4Avg">~352.500 ₫/năm</div>
                 <ul class="card-features">
                   <li>✓ Giải pháp an tâm tối đa 48 tháng</li>
                   <li>✓ Thay thế đầy đủ bộ lõi thô + RO + khoáng</li>
@@ -564,6 +630,87 @@
         <div class="sync-log-box" id="syncLogBox" style="display: none;">
           <div class="log-title">Nhật ký đồng bộ:</div>
           <div class="log-content" id="syncLogContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Promotion Settings Modal -->
+  <div class="modal-overlay" id="promoSettingsModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="modal-icon" style="color: var(--accent-rose);">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <div>
+            <h3 class="modal-heading">Cập Nhật Chương Trình Khuyến Mãi</h3>
+            <p class="modal-subheading">Điều chỉnh tỷ lệ % giảm giá từng gói và đồng bộ lên Firebase</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" id="btnClosePromoSettings" title="Đóng">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group mb-4">
+          <label class="form-label" for="inputPromoName">Tên Chương Trình Ưu Đãi:</label>
+          <input type="text" id="inputPromoName" class="form-control" placeholder="VD: Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX" />
+        </div>
+
+        <div class="promo-discount-inputs-grid">
+          <div class="discount-input-card">
+            <div class="input-card-title">Gói 1 Năm</div>
+            <div class="input-group-percent">
+              <span class="percent-minus">-</span>
+              <input type="number" id="inputDiscountY1" class="form-control-percent" min="0" max="90" value="10" />
+              <span class="percent-symbol">%</span>
+            </div>
+            <div class="input-subnote">Mặc định: Giảm 10%</div>
+          </div>
+
+          <div class="discount-input-card">
+            <div class="input-card-title">Gói 2 Năm</div>
+            <div class="input-group-percent">
+              <span class="percent-minus">-</span>
+              <input type="number" id="inputDiscountY2" class="form-control-percent" min="0" max="90" value="15" />
+              <span class="percent-symbol">%</span>
+            </div>
+            <div class="input-subnote">Mặc định: Giảm 15%</div>
+          </div>
+
+          <div class="discount-input-card">
+            <div class="input-card-title">Gói 3 Năm</div>
+            <div class="input-group-percent">
+              <span class="percent-minus">-</span>
+              <input type="number" id="inputDiscountY3" class="form-control-percent" min="0" max="90" value="20" />
+              <span class="percent-symbol">%</span>
+            </div>
+            <div class="input-subnote">Mặc định: Giảm 20%</div>
+          </div>
+
+          <div class="discount-input-card">
+            <div class="input-card-title">Gói 4 Năm</div>
+            <div class="input-group-percent">
+              <span class="percent-minus">-</span>
+              <input type="number" id="inputDiscountY4" class="form-control-percent" min="0" max="90" value="25" />
+              <span class="percent-symbol">%</span>
+            </div>
+            <div class="input-subnote">Mặc định: Giảm 25%</div>
+          </div>
+        </div>
+
+        <div class="promo-modal-actions">
+          <button class="btn btn-primary btn-block" id="btnSavePromoLocal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Lưu & Áp Dụng Ngay
+          </button>
+          <button class="btn btn-secondary btn-block" id="btnSavePromoFirebase">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+            Lưu Lên Firebase (Đồng bộ mọi thiết bị)
+          </button>
+          <button class="btn btn-outline btn-block" id="btnResetPromoDefaults">
+            Khôi Phục Chuẩn (10% - 15% - 20% - 25%)
+          </button>
         </div>
       </div>
     </div>

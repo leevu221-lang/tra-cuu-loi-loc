@@ -9212,5 +9212,13 @@
         "q4": 0
       }
     ]
+  },
+  "promotions": {
+    "enabled": true,
+    "programName": "Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX",
+    "discountY1": 10,
+    "discountY2": 15,
+    "discountY3": 20,
+    "discountY4": 25
   }
 }

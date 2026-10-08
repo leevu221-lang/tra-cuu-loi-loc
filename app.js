@@ -1,6 +1,6 @@
 /**
  * Tra Cứu Giá Gói Thay Lõi Lọc Nước
- * Kết nối Firebase Cloud Firestore & Tích hợp Quét QR / Barcode
+ * Kết nối Firebase Cloud Firestore, Tích hợp Quét QR / Barcode & Quản Lý Khuyến Mãi
  */
 
 // Firebase Firestore Config
@@ -20,7 +20,16 @@ const State = {
   activeBrandFilter: 'ALL',
   scannerInstance: null,
   isScanning: false,
-  selectedCameraId: null
+  selectedCameraId: null,
+  // Promotion settings (Gói 1 năm: 10%, Gói 2 năm: 15%, Gói 3 năm: 20%, Gói 4 năm: 25%)
+  promotions: {
+    enabled: true,
+    programName: "Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX",
+    discountY1: 10,
+    discountY2: 15,
+    discountY3: 20,
+    discountY4: 25
+  }
 };
 
 // DOM Elements
@@ -48,21 +57,46 @@ const DOM = {
   noPackageAlert: document.getElementById('noPackageAlert'),
   pricingGridSection: document.getElementById('pricingGridSection'),
 
-  // 4 Years
+  // Promotion Banner & Controls
+  promoBannerWrap: document.getElementById('promoBannerWrap'),
+  promoTitleText: document.getElementById('promoTitleText'),
+  togglePromoActive: document.getElementById('togglePromoActive'),
+  btnOpenPromoSettings: document.getElementById('btnOpenPromoSettings'),
+
+  // Year 1
   resY1Cores: document.getElementById('resY1Cores'),
+  tagY1Discount: document.getElementById('tagY1Discount'),
+  wrapY1OldPrice: document.getElementById('wrapY1OldPrice'),
+  resY1OldPrice: document.getElementById('resY1OldPrice'),
   resY1Price: document.getElementById('resY1Price'),
+  resY1Save: document.getElementById('resY1Save'),
   resY1Avg: document.getElementById('resY1Avg'),
 
+  // Year 2
   resY2Cores: document.getElementById('resY2Cores'),
+  tagY2Discount: document.getElementById('tagY2Discount'),
+  wrapY2OldPrice: document.getElementById('wrapY2OldPrice'),
+  resY2OldPrice: document.getElementById('resY2OldPrice'),
   resY2Price: document.getElementById('resY2Price'),
+  resY2Save: document.getElementById('resY2Save'),
   resY2Avg: document.getElementById('resY2Avg'),
 
+  // Year 3
   resY3Cores: document.getElementById('resY3Cores'),
+  tagY3Discount: document.getElementById('tagY3Discount'),
+  wrapY3OldPrice: document.getElementById('wrapY3OldPrice'),
+  resY3OldPrice: document.getElementById('resY3OldPrice'),
   resY3Price: document.getElementById('resY3Price'),
+  resY3Save: document.getElementById('resY3Save'),
   resY3Avg: document.getElementById('resY3Avg'),
 
+  // Year 4
   resY4Cores: document.getElementById('resY4Cores'),
+  tagY4Discount: document.getElementById('tagY4Discount'),
+  wrapY4OldPrice: document.getElementById('wrapY4OldPrice'),
+  resY4OldPrice: document.getElementById('resY4OldPrice'),
   resY4Price: document.getElementById('resY4Price'),
+  resY4Save: document.getElementById('resY4Save'),
   resY4Avg: document.getElementById('resY4Avg'),
 
   // Schedule
@@ -96,6 +130,18 @@ const DOM = {
   syncLogBox: document.getElementById('syncLogBox'),
   syncLogContent: document.getElementById('syncLogContent'),
   firebaseStatus: document.getElementById('firebaseStatus'),
+
+  // Promotion Settings Modal
+  promoSettingsModal: document.getElementById('promoSettingsModal'),
+  btnClosePromoSettings: document.getElementById('btnClosePromoSettings'),
+  inputPromoName: document.getElementById('inputPromoName'),
+  inputDiscountY1: document.getElementById('inputDiscountY1'),
+  inputDiscountY2: document.getElementById('inputDiscountY2'),
+  inputDiscountY3: document.getElementById('inputDiscountY3'),
+  inputDiscountY4: document.getElementById('inputDiscountY4'),
+  btnSavePromoLocal: document.getElementById('btnSavePromoLocal'),
+  btnSavePromoFirebase: document.getElementById('btnSavePromoFirebase'),
+  btnResetPromoDefaults: document.getElementById('btnResetPromoDefaults'),
 
   // Theme
   btnThemeToggle: document.getElementById('btnThemeToggle'),
@@ -156,6 +202,9 @@ function playScanChime() {
 // ==========================================
 
 async function initData() {
+  // Load saved local promotions if exists
+  loadSavedPromotions();
+
   // 1. First check window.EMBEDDED_DATA for 100% instantaneous 0ms load (works on file:// and http://)
   if (window.EMBEDDED_DATA) {
     applyDataset(window.EMBEDDED_DATA);
@@ -173,8 +222,9 @@ async function initData() {
     }
   }
 
-  // 2. Fetch fresh update from Firebase Cloud Firestore in background
+  // 2. Fetch fresh update from Firebase Cloud Firestore in background (including promotions)
   syncFromFirebase(false);
+  fetchPromotionsFromFirebase();
 }
 
 function applyDataset(data) {
@@ -199,10 +249,18 @@ function applyDataset(data) {
     totalPackages: Object.keys(State.packages).length
   };
 
+  if (data.promotions) {
+    // Only override if not already customized in localStorage
+    if (!localStorage.getItem('tra_cuu_promotions')) {
+      State.promotions = { ...State.promotions, ...data.promotions };
+    }
+  }
+
   DOM.statTotalProducts.textContent = State.products.length;
   DOM.statTotalPackages.textContent = Object.keys(State.packages).length;
 
   renderAllProductsTable(State.products);
+  updatePromotionUI();
 }
 
 async function syncFromFirebase(showFeedback = true) {
@@ -253,6 +311,54 @@ async function syncFromFirebase(showFeedback = true) {
       appendSyncLog(`⚠️ Không thể kết nối Firebase: ${err.message}. Đang sử dụng bộ nhớ đệm an toàn.`);
       showToast('Không kết nối được Firebase, đang dùng dữ liệu lưu trữ.', 'error');
     }
+  }
+}
+
+// Load promotions from Firebase
+async function fetchPromotionsFromFirebase() {
+  try {
+    const url = `${FIREBASE_CONFIG.baseUrl}/promotions?key=${FIREBASE_CONFIG.apiKey}`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const doc = await resp.json();
+      if (doc && doc.fields) {
+        const p = doc.fields;
+        State.promotions = {
+          enabled: p.enabled ? p.enabled.booleanValue : true,
+          programName: p.programName ? p.programName.stringValue : "Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX",
+          discountY1: p.discountY1 ? Number(p.discountY1.integerValue || 10) : 10,
+          discountY2: p.discountY2 ? Number(p.discountY2.integerValue || 15) : 15,
+          discountY3: p.discountY3 ? Number(p.discountY3.integerValue || 20) : 20,
+          discountY4: p.discountY4 ? Number(p.discountY4.integerValue || 25) : 25
+        };
+        localStorage.setItem('tra_cuu_promotions', JSON.stringify(State.promotions));
+        updatePromotionUI();
+        if (State.activeProduct) {
+          displayProduct(State.activeProduct);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Cannot fetch promotions from Firebase, using local config:', e);
+  }
+}
+
+function loadSavedPromotions() {
+  try {
+    const saved = localStorage.getItem('tra_cuu_promotions');
+    if (saved) {
+      State.promotions = JSON.parse(saved);
+    }
+  } catch (e) {}
+  updatePromotionUI();
+}
+
+function updatePromotionUI() {
+  if (DOM.togglePromoActive) {
+    DOM.togglePromoActive.checked = State.promotions.enabled;
+  }
+  if (DOM.promoTitleText) {
+    DOM.promoTitleText.textContent = `${State.promotions.programName || 'Ưu Đãi Đặc Biệt'}: Giảm ${State.promotions.discountY1}% - ${State.promotions.discountY2}% - ${State.promotions.discountY3}% - ${State.promotions.discountY4}%`;
   }
 }
 
@@ -390,6 +496,7 @@ function hideSuggestions() {
 
 // ==========================================
 // RENDER PRODUCT & 4-YEAR PACKAGE PRICING
+// (TÍNH TOÁN & HIỂN THỊ KHUYẾN MÃI CHI TIẾT)
 // ==========================================
 
 function displayProduct(product) {
@@ -433,38 +540,84 @@ function displayProduct(product) {
   DOM.noPackageAlert.style.display = 'none';
   DOM.pricingGridSection.style.display = 'block';
 
-  // Year 1
-  const y1 = pkgData.year1 || { cores: 0, price: 0 };
-  DOM.resY1Cores.textContent = y1.cores;
-  DOM.resY1Price.textContent = formatVND(y1.price);
-  const avgY1 = y1.cores > 0 ? Math.round(y1.price / y1.cores) : 0;
-  DOM.resY1Avg.textContent = avgY1 ? `~${formatVND(avgY1)} ₫/lõi` : 'Định kỳ năm 1';
+  const promo = State.promotions;
+  const isPromo = promo.enabled;
 
-  // Year 2
-  const y2 = pkgData.year2 || { cores: 0, price: 0 };
-  DOM.resY2Cores.textContent = y2.cores;
-  DOM.resY2Price.textContent = formatVND(y2.price);
-  const avgY2 = y2.price ? Math.round(y2.price / 2) : 0;
-  DOM.resY2Avg.textContent = avgY2 ? `~${formatVND(avgY2)} ₫/năm` : 'Định kỳ 2 năm';
+  // Helper calculation for each year
+  function applyCardDiscount(coresEl, tagEl, wrapOldEl, oldPriceEl, priceEl, saveEl, avgEl, yearData, discountPercent, yearNum) {
+    const cores = yearData?.cores || 0;
+    const origPrice = yearData?.price || 0;
+    coresEl.textContent = cores;
 
-  // Year 3
-  const y3 = pkgData.year3 || { cores: 0, price: 0 };
-  DOM.resY3Cores.textContent = y3.cores;
-  DOM.resY3Price.textContent = formatVND(y3.price);
-  const avgY3 = y3.price ? Math.round(y3.price / 3) : 0;
-  DOM.resY3Avg.textContent = avgY3 ? `~${formatVND(avgY3)} ₫/năm` : 'Định kỳ 3 năm';
+    if (isPromo && discountPercent > 0 && origPrice > 0) {
+      const discountAmount = Math.round(origPrice * discountPercent / 100);
+      const finalPrice = Math.max(0, origPrice - discountAmount);
 
-  // Year 4
-  const y4 = pkgData.year4 || { cores: 0, price: 0 };
-  DOM.resY4Cores.textContent = y4.cores;
-  DOM.resY4Price.textContent = formatVND(y4.price);
-  const avgY4 = y4.price ? Math.round(y4.price / 4) : 0;
-  DOM.resY4Avg.textContent = avgY4 ? `~${formatVND(avgY4)} ₫/năm` : 'Định kỳ 4 năm';
+      tagEl.textContent = `-${discountPercent}%`;
+      tagEl.style.display = 'inline-block';
+
+      wrapOldEl.style.display = 'flex';
+      oldPriceEl.textContent = `${formatVND(origPrice)} ₫`;
+
+      priceEl.textContent = formatVND(finalPrice);
+      priceEl.style.color = '#ef4444';
+
+      saveEl.textContent = `Tiết kiệm ${formatVND(discountAmount)} ₫`;
+      saveEl.style.display = 'inline-block';
+
+      if (yearNum === 1) {
+        const avg = cores > 0 ? Math.round(finalPrice / cores) : 0;
+        avgEl.textContent = avg ? `~${formatVND(avg)} ₫/lõi` : 'Định kỳ năm 1';
+      } else {
+        const avg = Math.round(finalPrice / yearNum);
+        avgEl.textContent = avg ? `~${formatVND(avg)} ₫/năm` : `Định kỳ ${yearNum} năm`;
+      }
+    } else {
+      // Normal original pricing without promo
+      tagEl.style.display = 'none';
+      wrapOldEl.style.display = 'none';
+      priceEl.textContent = formatVND(origPrice);
+      priceEl.style.color = 'var(--text-main)';
+      saveEl.style.display = 'none';
+
+      if (yearNum === 1) {
+        const avg = cores > 0 ? Math.round(origPrice / cores) : 0;
+        avgEl.textContent = avg ? `~${formatVND(avg)} ₫/lõi` : 'Định kỳ năm 1';
+      } else {
+        const avg = Math.round(origPrice / yearNum);
+        avgEl.textContent = avg ? `~${formatVND(avg)} ₫/năm` : `Định kỳ ${yearNum} năm`;
+      }
+    }
+  }
+
+  // Year 1 (Mặc định giảm 10%)
+  applyCardDiscount(
+    DOM.resY1Cores, DOM.tagY1Discount, DOM.wrapY1OldPrice, DOM.resY1OldPrice, 
+    DOM.resY1Price, DOM.resY1Save, DOM.resY1Avg, pkgData.year1, promo.discountY1, 1
+  );
+
+  // Year 2 (Mặc định giảm 15%)
+  applyCardDiscount(
+    DOM.resY2Cores, DOM.tagY2Discount, DOM.wrapY2OldPrice, DOM.resY2OldPrice, 
+    DOM.resY2Price, DOM.resY2Save, DOM.resY2Avg, pkgData.year2, promo.discountY2, 2
+  );
+
+  // Year 3 (Mặc định giảm 20%)
+  applyCardDiscount(
+    DOM.resY3Cores, DOM.tagY3Discount, DOM.wrapY3OldPrice, DOM.resY3OldPrice, 
+    DOM.resY3Price, DOM.resY3Save, DOM.resY3Avg, pkgData.year3, promo.discountY3, 3
+  );
+
+  // Year 4 (Mặc định giảm 25%)
+  applyCardDiscount(
+    DOM.resY4Cores, DOM.tagY4Discount, DOM.wrapY4OldPrice, DOM.resY4OldPrice, 
+    DOM.resY4Price, DOM.resY4Save, DOM.resY4Avg, pkgData.year4, promo.discountY4, 4
+  );
 
   // Render Core Schedule Details (From 'Thời gian thay lõi lọc')
   renderScheduleDetails(normPkg);
 
-  // Generate Customer Quote Template
+  // Generate Customer Quote Template with Promo Details
   updateQuoteMessage(product, pkgData);
 
   // Smooth scroll into result view
@@ -496,6 +649,8 @@ function renderScheduleDetails(normPkg) {
 
 function updateQuoteMessage(product, pkgData) {
   if (!product) return;
+  const promo = State.promotions;
+  const isPromo = promo.enabled;
   
   let msg = `Kính gửi Quý khách, Dịch vụ Thợ Điện Máy Xanh xin gửi báo giá gói thay lõi lọc nước chính hãng cho thiết bị:\n\n`;
   msg += `🏷️ Thiết bị: ${product.name}\n`;
@@ -504,11 +659,40 @@ function updateQuoteMessage(product, pkgData) {
   msg += `📦 Gói thay lõi áp dụng: ${product.packageName}\n\n`;
 
   if (pkgData) {
-    msg += `BẢNG GIÁ DỊCH VỤ THAY LÕI LỌC TRỌN GÓI (ĐÃ BAO GỒM CÔNG THỢ TẬN NHÀ):\n`;
-    msg += `1️⃣ Gói 1 Năm (${pkgData.year1?.cores || 0} lõi): ${formatVND(pkgData.year1?.price)} ₫\n`;
-    msg += `2️⃣ Gói 2 Năm (${pkgData.year2?.cores || 0} lõi): ${formatVND(pkgData.year2?.price)} ₫  ⭐(Khuyên dùng - Tiết kiệm)\n`;
-    msg += `3️⃣ Gói 3 Năm (${pkgData.year3?.cores || 0} lõi): ${formatVND(pkgData.year3?.price)} ₫\n`;
-    msg += `4️⃣ Gói 4 Năm (${pkgData.year4?.cores || 0} lõi): ${formatVND(pkgData.year4?.price)} ₫  👑(Gói bảo vệ trọn đời máy)\n\n`;
+    if (isPromo) {
+      msg += `🔥 CHƯƠNG TRÌNH KHUYẾN MÃI: ${promo.programName.toUpperCase()} (ĐÃ BAO GỒM CÔNG THỢ TẬN NHÀ):\n`;
+      
+      // Y1
+      const p1 = pkgData.year1?.price || 0;
+      const s1 = Math.round(p1 * promo.discountY1 / 100);
+      const f1 = p1 - s1;
+      msg += `1️⃣ Gói 1 Năm (${pkgData.year1?.cores || 0} lõi): ${formatVND(f1)} ₫  (Giá gốc: ${formatVND(p1)} ₫ - Giảm ${promo.discountY1}%, Tiết kiệm ${formatVND(s1)} ₫)\n`;
+
+      // Y2
+      const p2 = pkgData.year2?.price || 0;
+      const s2 = Math.round(p2 * promo.discountY2 / 100);
+      const f2 = p2 - s2;
+      msg += `2️⃣ Gói 2 Năm (${pkgData.year2?.cores || 0} lõi): ${formatVND(f2)} ₫  (Giá gốc: ${formatVND(p2)} ₫ - Giảm ${promo.discountY2}%, Tiết kiệm ${formatVND(s2)} ₫) ⭐(Khuyên dùng)\n`;
+
+      // Y3
+      const p3 = pkgData.year3?.price || 0;
+      const s3 = Math.round(p3 * promo.discountY3 / 100);
+      const f3 = p3 - s3;
+      msg += `3️⃣ Gói 3 Năm (${pkgData.year3?.cores || 0} lõi): ${formatVND(f3)} ₫  (Giá gốc: ${formatVND(p3)} ₫ - Giảm ${promo.discountY3}%, Tiết kiệm ${formatVND(s3)} ₫)\n`;
+
+      // Y4
+      const p4 = pkgData.year4?.price || 0;
+      const s4 = Math.round(p4 * promo.discountY4 / 100);
+      const f4 = p4 - s4;
+      msg += `4️⃣ Gói 4 Năm (${pkgData.year4?.cores || 0} lõi): ${formatVND(f4)} ₫  (Giá gốc: ${formatVND(p4)} ₫ - Giảm ${promo.discountY4}%, Tiết kiệm ${formatVND(s4)} ₫) 👑(Bảo vệ trọn đời máy)\n\n`;
+    } else {
+      msg += `BẢNG GIÁ DỊCH VỤ THAY LÕI LỌC TRỌN GÓI (ĐÃ BAO GỒM CÔNG THỢ TẬN NHÀ):\n`;
+      msg += `1️⃣ Gói 1 Năm (${pkgData.year1?.cores || 0} lõi): ${formatVND(pkgData.year1?.price)} ₫\n`;
+      msg += `2️⃣ Gói 2 Năm (${pkgData.year2?.cores || 0} lõi): ${formatVND(pkgData.year2?.price)} ₫  ⭐(Khuyên dùng - Tiết kiệm)\n`;
+      msg += `3️⃣ Gói 3 Năm (${pkgData.year3?.cores || 0} lõi): ${formatVND(pkgData.year3?.price)} ₫\n`;
+      msg += `4️⃣ Gói 4 Năm (${pkgData.year4?.cores || 0} lõi): ${formatVND(pkgData.year4?.price)} ₫  👑(Gói bảo vệ trọn đời máy)\n\n`;
+    }
+
     msg += `✨ Quyền lợi khách hàng: Cam kết 100% lõi lọc chính hãng, thợ kỹ thuật ĐMX có mặt đúng hẹn, kiểm tra áp lực nước và đo TDS sau khi thay hoàn toàn miễn phí!`;
   } else {
     msg += `⚠️ Lưu ý: Thiết bị này hiện chưa có gói biểu giá chuẩn. Kỹ thuật viên sẽ báo giá lõi thay thế thực tế theo nhu cầu của Quý khách.`;
@@ -521,7 +705,7 @@ function copyQuoteToClipboard() {
   const text = DOM.quotePreviewText.textContent;
   if (!text) return;
   navigator.clipboard.writeText(text).then(() => {
-    showToast('Đã sao chép nội dung báo giá vào bộ nhớ tạm! Có thể dán gửi Zalo ngay.', 'success');
+    showToast('Đã sao chép nội dung báo giá ưu đãi vào bộ nhớ tạm! Có thể gửi ngay cho khách.', 'success');
   }).catch(() => {
     showToast('Không thể sao chép tự động, vui lòng chọn bôi đen văn bản.', 'error');
   });
@@ -714,6 +898,91 @@ async function handleFileScan(e) {
 }
 
 // ==========================================
+// PROMOTION MODAL & SETTINGS MANAGEMENT
+// ==========================================
+
+function openPromoSettingsModal() {
+  const p = State.promotions;
+  DOM.inputPromoName.value = p.programName || "Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX";
+  DOM.inputDiscountY1.value = p.discountY1 ?? 10;
+  DOM.inputDiscountY2.value = p.discountY2 ?? 15;
+  DOM.inputDiscountY3.value = p.discountY3 ?? 20;
+  DOM.inputDiscountY4.value = p.discountY4 ?? 25;
+  DOM.promoSettingsModal.style.display = 'flex';
+}
+
+function closePromoSettingsModal() {
+  DOM.promoSettingsModal.style.display = 'none';
+}
+
+function savePromoSettings(isSaveFirebase = false) {
+  const name = DOM.inputPromoName.value.trim() || "Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX";
+  const y1 = Math.min(90, Math.max(0, parseInt(DOM.inputDiscountY1.value) || 0));
+  const y2 = Math.min(90, Math.max(0, parseInt(DOM.inputDiscountY2.value) || 0));
+  const y3 = Math.min(90, Math.max(0, parseInt(DOM.inputDiscountY3.value) || 0));
+  const y4 = Math.min(90, Math.max(0, parseInt(DOM.inputDiscountY4.value) || 0));
+
+  State.promotions = {
+    enabled: DOM.togglePromoActive.checked,
+    programName: name,
+    discountY1: y1,
+    discountY2: y2,
+    discountY3: y3,
+    discountY4: y4
+  };
+
+  localStorage.setItem('tra_cuu_promotions', JSON.stringify(State.promotions));
+  updatePromotionUI();
+
+  if (State.activeProduct) {
+    displayProduct(State.activeProduct);
+  }
+
+  closePromoSettingsModal();
+  showToast('Đã lưu và áp dụng khuyến mãi thành công!', 'success');
+
+  if (isSaveFirebase) {
+    pushPromotionsToFirebase(State.promotions);
+  }
+}
+
+async function pushPromotionsToFirebase(p) {
+  try {
+    const url = `${FIREBASE_CONFIG.baseUrl}/promotions?key=${FIREBASE_CONFIG.apiKey}`;
+    const payload = {
+      fields: {
+        enabled: { booleanValue: p.enabled },
+        programName: { stringValue: p.programName },
+        discountY1: { integerValue: String(p.discountY1) },
+        discountY2: { integerValue: String(p.discountY2) },
+        discountY3: { integerValue: String(p.discountY3) },
+        discountY4: { integerValue: String(p.discountY4) },
+        updatedAt: { stringValue: new Date().toISOString() }
+      }
+    };
+    const resp = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (resp.ok) {
+      showToast('Đã đồng bộ khuyến mãi mới lên Firebase Firestore!', 'success');
+    }
+  } catch (err) {
+    console.error('Firebase promo upload error:', err);
+    showToast('Lỗi tải khuyến mãi lên Firebase: ' + err.message, 'error');
+  }
+}
+
+function resetPromoDefaults() {
+  DOM.inputPromoName.value = "Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX";
+  DOM.inputDiscountY1.value = 10;
+  DOM.inputDiscountY2.value = 15;
+  DOM.inputDiscountY3.value = 20;
+  DOM.inputDiscountY4.value = 25;
+}
+
+// ==========================================
 // EVENT LISTENERS
 // ==========================================
 
@@ -805,6 +1074,28 @@ function setupEventListeners() {
   DOM.btnTriggerFirebaseReload.addEventListener('click', () => {
     syncFromFirebase(true);
   });
+
+  // Toggle Promotion Switch
+  DOM.togglePromoActive.addEventListener('change', (e) => {
+    State.promotions.enabled = e.target.checked;
+    localStorage.setItem('tra_cuu_promotions', JSON.stringify(State.promotions));
+    if (State.activeProduct) {
+      displayProduct(State.activeProduct);
+    }
+    showToast(State.promotions.enabled ? 'Đã bật áp dụng khuyến mãi!' : 'Đã tắt khuyến mãi, hiển thị giá gốc.', 'info');
+  });
+
+  // Open & Close Promo Settings Modal
+  DOM.btnOpenPromoSettings.addEventListener('click', openPromoSettingsModal);
+  DOM.btnClosePromoSettings.addEventListener('click', closePromoSettingsModal);
+  DOM.promoSettingsModal.addEventListener('click', (e) => {
+    if (e.target === DOM.promoSettingsModal) closePromoSettingsModal();
+  });
+
+  // Promo Settings Actions
+  DOM.btnSavePromoLocal.addEventListener('click', () => savePromoSettings(false));
+  DOM.btnSavePromoFirebase.addEventListener('click', () => savePromoSettings(true));
+  DOM.btnResetPromoDefaults.addEventListener('click', resetPromoDefaults);
 
   // Toggle Schedule Accordion
   DOM.btnToggleSchedule.addEventListener('click', () => {
