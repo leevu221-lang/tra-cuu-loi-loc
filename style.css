@@ -3432,8 +3432,10 @@ body.theme-dark .btn-role-badge.role-admin {
 /* ==========================================================================
    STRICT PERMISSION RESTRICTIONS FOR STAFF (NHÂN VIÊN)
    Quyền hạn Nhân viên: CHỈ TRA CỨU, KHÔNG ĐƯỢC THIẾT LẬP CÁC THÔNG SỐ KHÁC
-   NHƯ CÀI ĐẶT KHUYẾN MÃI.
+   "Nhân viên" sẽ không xem được tab cài đặt khuyến mãi này (#promoBannerWrap)
    ========================================================================== */
+body.role-staff #promoBannerWrap,
+body.role-staff .promo-banner-wrap,
 body.role-staff #btnOpenPromoSettings,
 body.role-staff .btn-promo-edit {
   display: none !important;

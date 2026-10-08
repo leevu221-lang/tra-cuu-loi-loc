@@ -1210,6 +1210,11 @@ function applyRole(role) {
   if (DOM.togglePromoActive) {
     DOM.togglePromoActive.disabled = !isTargetAdmin;
   }
+
+  // "Nhân viên" sẽ không xem được tab cài đặt khuyến mãi này (#promoBannerWrap)
+  if (DOM.promoBannerWrap) {
+    DOM.promoBannerWrap.style.display = isTargetAdmin ? 'flex' : 'none';
+  }
 }
 
 function openRoleModal() {
