@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tra Cứu Giá Gói Thay Lõi Lọc Nước - Thợ ĐMX & Khách Hàng</title>
+  <meta name="description" content="Hệ thống tra cứu nhanh mã sản phẩm máy lọc nước, đối soát và hiển thị bảng giá gói thay lõi lọc nước 1 năm, 2 năm, 3 năm, 4 năm từ dữ liệu Google Sheet & Firebase Firestore.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  
+  <!-- QR & Barcode Scanner Library -->
+  <script src="html5-qrcode.min.js"></script>
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-light">
+  <!-- Top Background Ambient Glow -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- App Header / Navbar -->
+  <header class="app-header">
+    <div class="container header-content">
+      <div class="brand-group">
+        <div class="brand-logo">
+          <svg class="icon-water" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+            <path d="M12 12a3 3 0 1 0 3 3" opacity="0.6"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="badge-mini">DỊCH VỤ THỢ ĐIỆN MÁY XANH</div>
+          <h1 class="brand-title">Tra Cứu Gói Thay Lõi Lọc</h1>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Firebase Status Indicator -->
+        <div class="firebase-status" id="firebaseStatus" title="Trạng thái kết nối Firebase Firestore">
+          <span class="status-dot"></span>
+          <span class="status-label">Firebase: Sẵn sàng</span>
+        </div>
+
+        <!-- Sync Button -->
+        <button class="btn btn-ghost" id="btnOpenSync" title="Xem thông tin dữ liệu & Đồng bộ">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+          </svg>
+          <span class="btn-text">Đồng bộ</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="btn btn-icon" id="btnThemeToggle" title="Chuyển chế độ sáng/tối">
+          <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="container main-layout">
+    
+    <!-- Hero Search Section -->
+    <section class="search-section">
+      <div class="search-card">
+        <div class="search-header">
+          <h2 class="search-heading">Nhập mã sản phẩm hoặc Quét mã vạch / QR</h2>
+          <p class="search-desc">Hệ thống tự động tra cứu máy lọc nước và báo giá các gói thay lõi tương ứng 1 năm, 2 năm, 3 năm, 4 năm</p>
+        </div>
+
+        <!-- Big Search Bar -->
+        <div class="search-bar-wrap">
+          <div class="search-input-box">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input 
+              type="text" 
+              id="productSearchInput" 
+              class="search-input" 
+              placeholder="Nhập 13 số mã sản phẩm (VD: 1114171000203) hoặc tên máy..." 
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button class="btn-clear" id="btnClearSearch" title="Xóa nội dung tìm kiếm" style="display: none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Quick QR / Barcode Scan Trigger Button -->
+          <button class="btn btn-primary btn-scan-trigger" id="btnStartScan" title="Mở máy ảnh quét mã vạch / QR tem máy">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+              <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+              <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+              <path d="M3 17v2a2 2 0 0 0 2 2h2"></path>
+              <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+              <line x1="7" y1="12" x2="17" y2="12"></line>
+            </svg>
+            <span class="btn-text">Quét QR / Barcode</span>
+          </button>
+        </div>
+
+        <!-- Autocomplete Suggestions Dropdown -->
+        <div class="suggestions-dropdown" id="suggestionsDropdown" style="display: none;"></div>
+
+        <!-- Quick Sample Chips -->
+        <div class="quick-samples">
+          <span class="samples-label">Thử nhanh mã mẫu:</span>
+          <div class="samples-list" id="sampleChipsList">
+            <button class="chip" data-code="1114171000203">1114171000203 (Hòa Phát HPA885)</button>
+            <button class="chip" data-code="1114171000199">1114171000199 (Mutosi MP-P89K)</button>
+            <button class="chip" data-code="1114172000068">1114172000068 (Mutosi MP-1101)</button>
+            <button class="chip" data-code="1114171000181">1114171000181 (Karofi KAE-S65)</button>
+            <button class="chip" data-code="1114171000172">1114171000172 (Kangaroo KG10A3)</button>
+            <button class="chip" data-code="1114171000185">1114171000185 (Sunhouse SHA76213CK)</button>
+          </div>
+        </div>
+
+        <!-- Brand Filter Pills -->
+        <div class="brand-filter-bar">
+          <span class="filter-label">Hãng:</span>
+          <div class="brand-pills-list" id="brandPillsList">
+            <button class="brand-pill active" data-brand="ALL">Tất cả</button>
+            <button class="brand-pill" data-brand="Hòa Phát">Hòa Phát</button>
+            <button class="brand-pill" data-brand="MUTOSI">Mutosi</button>
+            <button class="brand-pill" data-brand="KAROFI">Karofi</button>
+            <button class="brand-pill" data-brand="KANGAROO">Kangaroo</button>
+            <button class="brand-pill" data-brand="SUNHOUSE">Sunhouse</button>
+            <button class="brand-pill" data-brand="TOSHIBA">Toshiba</button>
+            <button class="brand-pill" data-brand="KORIHOME">Korihome</button>
+            <button class="brand-pill" data-brand="LIVOTEC">Livotec</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Result Display Container -->
+    <section class="result-section" id="resultSection">
+      <!-- Default Placeholder / Empty State -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <path d="M11 8v6"></path>
+            <path d="M8 11h6"></path>
+          </svg>
+        </div>
+        <h3 class="empty-title">Chưa có mã máy nào được chọn</h3>
+        <p class="empty-desc">Hãy nhập 13 số mã sản phẩm ở ô tìm kiếm trên hoặc bấm <strong>"Quét QR / Barcode"</strong> bằng camera để tra cứu báo giá gói thay lõi ngay lập tức.</p>
+        
+        <div class="stat-pills">
+          <div class="stat-pill">
+            <span class="stat-num" id="statTotalProducts">222</span>
+            <span class="stat-text">Máy lọc nước</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-num" id="statTotalPackages">25</span>
+            <span class="stat-text">Gói thay lõi</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-num">4</span>
+            <span class="stat-text">Kỳ hạn gói (1-4 Năm)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Result Card (Hidden until matched) -->
+      <div class="product-result-card" id="productResultCard" style="display: none;">
+        
+        <!-- Header Info of matched product -->
+        <div class="product-info-panel">
+          <div class="panel-left">
+            <div class="product-meta-row">
+              <span class="badge badge-code" id="resProductCode">1114171000203</span>
+              <span class="badge badge-brand" id="resProductBrand">Hòa Phát</span>
+              <span class="badge badge-category" id="resProductCategory">Lọc nước tủ đứng</span>
+              <span class="badge badge-warranty" id="resProductWarranty">BH: 36 Tháng</span>
+            </div>
+            <h2 class="product-title" id="resProductName">Máy lọc nước RO nóng lạnh tủ đứng Hydrogen ion kiềm Hòa Phát HyperS HPA885 12 lõi (Imei)</h2>
+            <div class="product-price-row">
+              <div class="price-item">
+                <span class="price-label">Giá niêm yết máy (+VAT):</span>
+                <span class="price-val" id="resProductPrice">16.899.000 ₫</span>
+              </div>
+              <div class="price-item">
+                <span class="price-label">Khung giá phân khúc:</span>
+                <span class="price-badge-sub" id="resProductPriceRange">Từ 15-20 triệu</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-right">
+            <div class="assigned-package-box">
+              <div class="pkg-box-label">GÓI THAY LÕI ÁP DỤNG</div>
+              <div class="pkg-box-name" id="resPackageName">Hòa Phát Gói 2</div>
+              <div class="pkg-box-sub" id="resPackageStatus">Đã có biểu giá chuẩn 4 năm</div>
+            </div>
+            
+            <div class="quick-action-buttons">
+              <button class="btn btn-secondary btn-sm" id="btnCopyQuote">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>Sao chép báo giá Zalo</span>
+              </button>
+              <button class="btn btn-outline btn-sm" id="btnPrintCard">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                  <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                <span>In phiếu</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Package Warning (if machine doesn't have package yet) -->
+        <div class="alert-box alert-warning" id="noPackageAlert" style="display: none;">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-content">
+            <h4>Sản phẩm này chưa được thiết kế gói thay lõi trong hệ thống</h4>
+            <p>Mã máy này đang ghi nhận "Chưa thiết kế gói thay lõi". Vui lòng liên hệ bộ phận kỹ thuật dịch vụ ĐMX để được tư vấn báo giá linh kiện lẻ.</p>
+          </div>
+        </div>
+
+        <!-- 4-Year Pricing Grid (from sheet "GÓI THAY LLN") -->
+        <div class="pricing-grid-section" id="pricingGridSection">
+          <div class="section-title-wrap">
+            <h3 class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon">
+                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              Bảng Giá Dịch Vụ Thay Lõi Lọc Theo Kỳ Hạn (Thợ ĐMX)
+            </h3>
+            <span class="section-sub">Bao gồm công thợ lắp đặt tận nhà + lõi lọc chính hãng 100%</span>
+          </div>
+
+          <!-- 4 Cards Grid -->
+          <div class="year-cards-grid">
+            
+            <!-- Card Year 1 -->
+            <div class="year-card" id="cardYear1">
+              <div class="card-badge">Kỳ Hạn Ngắn</div>
+              <div class="card-header">
+                <h4 class="card-year-title">Gói 1 Năm</h4>
+                <div class="cores-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  <span id="resY1Cores">4</span> lõi lọc
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="card-price-wrap">
+                  <span class="price-figure" id="resY1Price">400.000</span>
+                  <span class="currency">₫</span>
+                </div>
+                <div class="price-subtext" id="resY1Avg">~100.000 ₫/lõi</div>
+                <ul class="card-features">
+                  <li>✓ Thay thế định kỳ năm đầu</li>
+                  <li>✓ Miễn phí công thợ ĐMX tới nhà</li>
+                  <li>✓ Kiểm tra chất lượng nước sau thay</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Card Year 2 -->
+            <div class="year-card highlight-card" id="cardYear2">
+              <div class="card-badge badge-popular">Phổ Biến Nhất</div>
+              <div class="card-header">
+                <h4 class="card-year-title">Gói 2 Năm</h4>
+                <div class="cores-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  <span id="resY2Cores">8</span> lõi lọc
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="card-price-wrap">
+                  <span class="price-figure" id="resY2Price">841.000</span>
+                  <span class="currency">₫</span>
+                </div>
+                <div class="price-subtext" id="resY2Avg">~420.500 ₫/năm</div>
+                <ul class="card-features">
+                  <li>✓ Bảo dưỡng toàn diện 24 tháng</li>
+                  <li>✓ Đầy đủ các đợt thay thô & chức năng</li>
+                  <li>✓ Nhắc lịch tự động trước khi tới kỳ</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Card Year 3 -->
+            <div class="year-card" id="cardYear3">
+              <div class="card-badge">Tối Ưu RO</div>
+              <div class="card-header">
+                <h4 class="card-year-title">Gói 3 Năm</h4>
+                <div class="cores-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  <span id="resY3Cores">14</span> lõi lọc
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="card-price-wrap">
+                  <span class="price-figure" id="resY3Price">1.338.000</span>
+                  <span class="currency">₫</span>
+                </div>
+                <div class="price-subtext" id="resY3Avg">~446.000 ₫/năm</div>
+                <ul class="card-features">
+                  <li>✓ Bao trọn chu kỳ màng RO trái tim máy</li>
+                  <li>✓ Tiết kiệm chi phí so với mua lẻ</li>
+                  <li>✓ Kỹ thuật viên bảo dưỡng áp lực bơm</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Card Year 4 -->
+            <div class="year-card premium-card" id="cardYear4">
+              <div class="card-badge badge-premium">Trọn Đời Máy</div>
+              <div class="card-header">
+                <h4 class="card-year-title">Gói 4 Năm</h4>
+                <div class="cores-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  <span id="resY4Cores">18</span> lõi lọc
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="card-price-wrap">
+                  <span class="price-figure" id="resY4Price">1.880.000</span>
+                  <span class="currency">₫</span>
+                </div>
+                <div class="price-subtext" id="resY4Avg">~470.000 ₫/năm</div>
+                <ul class="card-features">
+                  <li>✓ Giải pháp an tâm tối đa 48 tháng</li>
+                  <li>✓ Thay thế đầy đủ bộ lõi thô + RO + khoáng</li>
+                  <li>✓ Giá tốt nhất trên mỗi lần thay</li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Detailed Core Replacement Schedule Table (Bonus from sheet "Thời gian thay lõi lọc") -->
+        <div class="schedule-section" id="scheduleSection">
+          <div class="schedule-header" id="btnToggleSchedule">
+            <div class="sched-title-wrap">
+              <svg class="sched-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              <div>
+                <h4 class="sched-title">Chi Tiết Lõi Lọc & Chu Kỳ Thay Của Gói</h4>
+                <p class="sched-subtitle">Xem danh sách mã lõi, vị trí lắp và lịch thay theo từng quý trong năm</p>
+              </div>
+            </div>
+            <div class="accordion-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+
+          <div class="schedule-body" id="scheduleBody">
+            <div class="table-responsive">
+              <table class="schedule-table">
+                <thead>
+                  <tr>
+                    <th>Vị trí</th>
+                    <th>Mã Lõi</th>
+                    <th>Tên Lõi Lọc</th>
+                    <th>Chu Kỳ</th>
+                    <th class="text-center">Tháng 1-3</th>
+                    <th class="text-center">Tháng 4-6</th>
+                    <th class="text-center">Tháng 7-9</th>
+                    <th class="text-center">Tháng 10-12</th>
+                  </tr>
+                </thead>
+                <tbody id="scheduleTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Consultation Message Template Preview -->
+        <div class="quote-preview-card">
+          <div class="quote-header">
+            <div class="quote-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              Mẫu Tin Nhắn Tư Vấn Báo Giá (Sẵn Sàng Gửi Khách Hàng)
+            </div>
+            <button class="btn btn-outline btn-xs" id="btnCopyQuoteDirect">Sao chép nhanh</button>
+          </div>
+          <pre class="quote-text-box" id="quotePreviewText">Đang tạo nội dung...</pre>
+        </div>
+
+      </div>
+
+      <!-- Browse All Products Table / Drawer (Expandable) -->
+      <div class="all-products-section">
+        <div class="all-products-header">
+          <div>
+            <h3 class="all-title">Danh Sách 222 Model Máy Lọc Nước Đang Quản Lý</h3>
+            <p class="all-desc">Bấm vào bất kỳ dòng nào bên dưới để xem ngay giá gói thay lõi của model đó</p>
+          </div>
+          <div class="table-search-box">
+            <input type="text" id="quickFilterInput" placeholder="Lọc nhanh danh sách..." />
+          </div>
+        </div>
+
+        <div class="table-responsive product-list-table-wrap">
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th>Mã Sản Phẩm</th>
+                <th>Tên Máy Lọc Nước</th>
+                <th>Hãng</th>
+                <th>Giá Bán Chuẩn</th>
+                <th>Gói Thay Lõi</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="allProductsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- QR / Barcode Scanner Modal -->
+  <div class="modal-overlay" id="scannerModal" style="display: none;">
+    <div class="modal-card scanner-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="modal-icon">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+            <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+            <path d="M3 17v2a2 2 0 0 0 2 2h2"></path>
+            <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+          </svg>
+          <div>
+            <h3 class="modal-heading">Quét Mã Vạch / QR Tem Máy</h3>
+            <p class="modal-subheading">Đưa camera vào tem mã vạch (EAN-13) hoặc mã QR trên thân máy lọc nước</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" id="btnCloseScanner" title="Đóng">✕</button>
+      </div>
+
+      <div class="modal-body scanner-modal-body">
+        <!-- Live Viewport Container -->
+        <div class="camera-viewport-wrap">
+          <div id="interactiveScanner" class="interactive-scanner"></div>
+          
+          <!-- Animated Laser Overlay -->
+          <div class="scanner-aim-frame">
+            <div class="corner corner-tl"></div>
+            <div class="corner corner-tr"></div>
+            <div class="corner corner-bl"></div>
+            <div class="corner corner-br"></div>
+            <div class="laser-scanner-line"></div>
+          </div>
+        </div>
+
+        <!-- Camera Controls -->
+        <div class="camera-controls">
+          <div class="camera-select-wrap">
+            <label for="cameraSelect">Camera:</label>
+            <select id="cameraSelect" class="form-select"></select>
+          </div>
+          
+          <!-- Image upload fallback for file scanning -->
+          <label class="btn btn-outline btn-file-scan" for="fileScanInput">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Tải ảnh chụp tem mã
+          </label>
+          <input type="file" id="fileScanInput" accept="image/*" style="display: none;" />
+        </div>
+
+        <div class="scanner-tip">
+          💡 Mẹo: Giữ máy cố định, đủ ánh sáng. Hệ thống nhận diện mã 13 chữ số ngay tức thì và tự động hiển thị giá gói!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase & Google Sheet Sync Modal -->
+  <div class="modal-overlay" id="syncModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="modal-icon">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          <div>
+            <h3 class="modal-heading">Trạng Thái Dữ Liệu & Đồng Bộ</h3>
+            <p class="modal-subheading">Quản lý kết nối Firebase Cloud Firestore & Google Sheet gốc</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" id="btnCloseSync" title="Đóng">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="sync-info-box">
+          <div class="info-row">
+            <span class="info-label">Dự án Firebase:</span>
+            <span class="info-val">crm-43751-71e4b (Firestore Database)</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Google Sheet nguồn:</span>
+            <a href="https://docs.google.com/spreadsheets/d/1oDMEUk0xnP0nXHGxNJa8uLmcSOHsauaccEpp6EFcD7I/edit?usp=sharing" target="_blank" class="info-link">Mở Google Sheet ↗</a>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Sheet 1:</span>
+            <span class="info-val">MÁY LỌC NƯỚC-GÓI THAY LLN (222 Model)</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Sheet 2:</span>
+            <span class="info-val">GÓI THAY LLN (25 Gói dịch vụ 4 năm)</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Thời gian nạp:</span>
+            <span class="info-val" id="syncLastTime">Vừa xong (Trực tuyến)</span>
+          </div>
+        </div>
+
+        <div class="sync-actions-group">
+          <button class="btn btn-primary btn-block" id="btnTriggerFirebaseReload">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Tải Lại Dữ Liệu Mới Nhất Từ Firebase
+          </button>
+        </div>
+
+        <div class="sync-log-box" id="syncLogBox" style="display: none;">
+          <div class="log-title">Nhật ký đồng bộ:</div>
+          <div class="log-content" id="syncLogContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Embedded Data Snapshot (Offline & File:// Compatible) -->
+  <script src="data.js"></script>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "tra-cuu-loi-loc-nuoc",
+  "version": "1.0.0",
+  "description": "Hệ thống tra cứu giá gói thay lõi lọc nước Thợ ĐMX & Khách Hàng với Firebase Firestore & Quét QR/Barcode",
+  "scripts": {
+    "start": "python3 -m http.server 3030",
+    "dev": "python3 -m http.server 3030",
+    "upload-firebase": "python3 upload_to_firebase.py"
+  },
+  "keywords": [
+    "may-loc-nuoc",
+    "dmx",
+    "loi-loc",
+    "firebase",
+    "qr-code"
+  ],
+  "author": "DMX Service",
+  "license": "MIT"
+}
