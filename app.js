@@ -1567,20 +1567,33 @@ function setupEventListeners() {
   DOM.fileScanInput.addEventListener('change', handleFileScan);
 
   // Sync Modal
-  DOM.btnOpenSync.addEventListener('click', () => {
-    DOM.syncModal.style.display = 'flex';
-  });
-  DOM.btnCloseSync.addEventListener('click', () => {
-    DOM.syncModal.style.display = 'none';
-  });
-  DOM.syncModal.addEventListener('click', (e) => {
-    if (e.target === DOM.syncModal) DOM.syncModal.style.display = 'none';
-  });
+  if (DOM.btnOpenSync) {
+    DOM.btnOpenSync.addEventListener('click', () => {
+      DOM.syncModal.style.display = 'flex';
+    });
+  }
+  if (DOM.firebaseStatus) {
+    DOM.firebaseStatus.addEventListener('click', () => {
+      DOM.syncModal.style.display = 'flex';
+    });
+  }
+  if (DOM.btnCloseSync) {
+    DOM.btnCloseSync.addEventListener('click', () => {
+      DOM.syncModal.style.display = 'none';
+    });
+  }
+  if (DOM.syncModal) {
+    DOM.syncModal.addEventListener('click', (e) => {
+      if (e.target === DOM.syncModal) DOM.syncModal.style.display = 'none';
+    });
+  }
 
-  // Firebase Trigger Reload
-  DOM.btnTriggerFirebaseReload.addEventListener('click', () => {
-    syncFromFirebase(true);
-  });
+  // Firebase Trigger Reload (nếu tồn tại)
+  if (DOM.btnTriggerFirebaseReload) {
+    DOM.btnTriggerFirebaseReload.addEventListener('click', () => {
+      syncFromFirebase(true);
+    });
+  }
 
   // Toggle Promotion Switch (Chỉ Admin mới có quyền bật/tắt)
   DOM.togglePromoActive.addEventListener('change', (e) => {

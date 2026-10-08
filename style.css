@@ -3445,10 +3445,19 @@ body.role-staff .promo-switch-label {
   cursor: not-allowed !important;
 }
 
-body.role-staff #btnTriggerFirebaseReload {
+/* Ẩn hoàn toàn button đồng bộ từ Google Sheet / Firebase theo yêu cầu người dùng */
+#btnOpenSync,
+.sync-actions-group,
+#btnTriggerFirebaseReload {
   display: none !important;
 }
-body.role-staff .sync-actions-group {
-  display: none !important;
+
+.firebase-status {
+  cursor: pointer;
+  user-select: none;
+}
+.firebase-status:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--primary-border);
 }
 

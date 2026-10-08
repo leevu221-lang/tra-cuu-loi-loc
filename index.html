@@ -45,8 +45,8 @@
           <span class="status-label">Firebase: Sẵn sàng</span>
         </div>
 
-        <!-- Sync Button -->
-        <button class="btn btn-ghost" id="btnOpenSync" title="Xem thông tin dữ liệu & Đồng bộ">
+        <!-- Sync Button (Đã ẩn theo yêu cầu) -->
+        <button class="btn btn-ghost" id="btnOpenSync" title="Xem thông tin dữ liệu & Đồng bộ" style="display: none !important;">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
           </svg>
@@ -722,8 +722,9 @@
           </div>
         </div>
 
-        <div class="sync-actions-group">
-          <button class="btn btn-primary btn-block" id="btnTriggerFirebaseReload">
+        <!-- Sync Actions Group (Đã ẩn theo yêu cầu) -->
+        <div class="sync-actions-group" style="display: none !important;">
+          <button class="btn btn-primary btn-block" id="btnTriggerFirebaseReload" style="display: none !important;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             Tải Lại Dữ Liệu Mới Nhất Từ Firebase
           </button>
