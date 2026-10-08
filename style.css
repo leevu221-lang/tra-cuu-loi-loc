@@ -3124,6 +3124,27 @@ body.theme-dark .status-yes {
   display: none;
 }
 
+/* Galaxy Z Fold Folding Chassis */
+.sim-phone-chassis.os-fold {
+  border-radius: 28px;
+  border-width: 10px;
+}
+.sim-phone-chassis.os-fold .sim-phone-screen-wrap {
+  border-radius: 18px;
+}
+.sim-phone-chassis.os-fold .sim-phone-notch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  top: 10px;
+  right: 25%;
+  left: auto;
+  transform: none;
+}
+.sim-phone-chassis.os-fold .sim-home-bar {
+  display: none;
+}
+
 /* The embedded iframe */
 .sim-iframe {
   width: 100%;

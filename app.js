@@ -1269,7 +1269,7 @@ function updateSimulatorDimensions() {
   DOM.simPhoneScreenWrap.style.width = `${w}px`;
   DOM.simPhoneScreenWrap.style.height = `${h}px`;
 
-  DOM.simPhoneChassis.classList.remove('os-ios', 'os-android');
+  DOM.simPhoneChassis.classList.remove('os-ios', 'os-android', 'os-fold');
   DOM.simPhoneChassis.classList.add(`os-${os}`);
 
   // Calculate Auto Scale so the entire phone comfortably fits in viewport stage
@@ -1282,7 +1282,7 @@ function updateSimulatorDimensions() {
     const scaleH = availableH / (h + 24); // chassis border
     const scaleW = availableW / (w + 24);
     scale = Math.min(1, scaleH, scaleW);
-    scale = Math.max(0.45, Math.min(1, scale));
+    scale = Math.max(0.35, Math.min(1, scale));
   } else {
     scale = parseFloat(scaleSelectVal) || 1;
   }
