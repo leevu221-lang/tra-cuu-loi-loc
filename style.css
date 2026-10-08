@@ -3047,8 +3047,8 @@ body.theme-dark .status-yes {
 /* Screen Wrapper */
 .sim-phone-screen-wrap {
   position: relative;
-  width: 390px;
-  height: 844px;
+  width: 440px;
+  height: 956px;
   background: #ffffff;
   border-radius: 38px;
   overflow: hidden;

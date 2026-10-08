@@ -1259,8 +1259,8 @@ function updateSimulatorDimensions() {
   const selectedOpt = DOM.selectSimDevice.options[DOM.selectSimDevice.selectedIndex];
   if (!selectedOpt) return;
 
-  let baseW = parseInt(selectedOpt.getAttribute('data-w'), 10) || 390;
-  let baseH = parseInt(selectedOpt.getAttribute('data-h'), 10) || 844;
+  let baseW = parseInt(selectedOpt.getAttribute('data-w'), 10) || 440;
+  let baseH = parseInt(selectedOpt.getAttribute('data-h'), 10) || 956;
   const os = selectedOpt.getAttribute('data-os') || 'ios';
 
   let w = simIsLandscape ? baseH : baseW;
