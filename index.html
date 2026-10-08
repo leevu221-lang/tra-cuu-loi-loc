@@ -313,6 +313,10 @@
                 <div class="save-tag" id="resY1Save">Tiết kiệm 40.000 ₫</div>
                 <div class="price-subtext" id="resY1Avg">~90.000 ₫/lõi</div>
                 <ul class="card-features">
+                  <li class="feat-core-highlight">
+                    <span>📦 Số lượng lõi thay:</span>
+                    <strong class="badge-cores-count" id="featY1Cores">4 lõi lọc</strong>
+                  </li>
                   <li>✓ Thay thế định kỳ năm đầu</li>
                   <li>✓ Miễn phí công thợ ĐMX tới nhà</li>
                   <li>✓ Kiểm tra chất lượng nước sau thay</li>
@@ -348,6 +352,10 @@
                 <div class="save-tag" id="resY2Save">Tiết kiệm 126.150 ₫</div>
                 <div class="price-subtext" id="resY2Avg">~357.400 ₫/năm</div>
                 <ul class="card-features">
+                  <li class="feat-core-highlight">
+                    <span>📦 Số lượng lõi thay:</span>
+                    <strong class="badge-cores-count" id="featY2Cores">8 lõi lọc</strong>
+                  </li>
                   <li>✓ Bảo dưỡng toàn diện 24 tháng</li>
                   <li>✓ Đầy đủ các đợt thay thô & chức năng</li>
                   <li>✓ Nhắc lịch tự động trước khi tới kỳ</li>
@@ -383,6 +391,10 @@
                 <div class="save-tag" id="resY3Save">Tiết kiệm 267.600 ₫</div>
                 <div class="price-subtext" id="resY3Avg">~356.800 ₫/năm</div>
                 <ul class="card-features">
+                  <li class="feat-core-highlight">
+                    <span>📦 Số lượng lõi thay:</span>
+                    <strong class="badge-cores-count" id="featY3Cores">14 lõi lọc</strong>
+                  </li>
                   <li>✓ Bao trọn chu kỳ màng RO trái tim máy</li>
                   <li>✓ Tiết kiệm chi phí so với mua lẻ</li>
                   <li>✓ Kỹ thuật viên bảo dưỡng áp lực bơm</li>
@@ -418,6 +430,10 @@
                 <div class="save-tag" id="resY4Save">Tiết kiệm 470.000 ₫</div>
                 <div class="price-subtext" id="resY4Avg">~352.500 ₫/năm</div>
                 <ul class="card-features">
+                  <li class="feat-core-highlight">
+                    <span>📦 Số lượng lõi thay:</span>
+                    <strong class="badge-cores-count" id="featY4Cores">18 lõi lọc</strong>
+                  </li>
                   <li>✓ Giải pháp an tâm tối đa 48 tháng</li>
                   <li>✓ Thay thế đầy đủ bộ lõi thô + RO + khoáng</li>
                   <li>✓ Giá tốt nhất trên mỗi lần thay</li>
@@ -426,6 +442,43 @@
             </div>
 
           </div>
+
+          <!-- Chi Tiết Đối Soát Số Lượng Lõi Từng Gói (Sheet "GÓI THAY LLN") -->
+          <div class="pkg-cores-summary-section">
+            <div class="summary-section-header">
+              <div class="summary-title-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="summary-icon">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+                <div>
+                  <h4 class="summary-box-title">Thông Tin Số Lượng Lõi Từng Gói (Trích Xuất Sheet "GÓI THAY LLN")</h4>
+                  <p class="summary-box-sub">Số lượng lõi thay thế và chi phí tương ứng được quản lý trực tiếp từ sheet dữ liệu gốc</p>
+                </div>
+              </div>
+              <div class="pkg-tag-badge" id="summaryBoxPkgName">Hòa Phát Gói 2</div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="summary-cores-table">
+                <thead>
+                  <tr>
+                    <th>Kỳ hạn gói</th>
+                    <th class="text-center">Số lượng lõi (Sheet GÓI THAY LLN)</th>
+                    <th>Giá gốc niêm yết</th>
+                    <th>Giá khuyến mãi</th>
+                    <th>Tiết kiệm</th>
+                    <th>Bình quân</th>
+                  </tr>
+                </thead>
+                <tbody id="tableSummaryCoresBody">
+                  <!-- Dynamic rows rendered in JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
 
         <!-- Detailed Core Replacement Schedule Table (Bonus from sheet "Thời gian thay lõi lọc") -->

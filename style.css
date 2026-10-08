@@ -1293,6 +1293,137 @@ body.theme-dark .save-tag {
   border-top: 1px dashed var(--border-light);
 }
 
+/* Feature Core Highlight Row */
+.feat-core-highlight {
+  background: var(--bg-surface);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.badge-cores-count {
+  background: var(--primary-subtle);
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--primary-border);
+}
+
+/* ==========================================
+   PACKAGE CORES SUMMARY SECTION (SHEET GÓI THAY LLN)
+   ========================================== */
+.pkg-cores-summary-section {
+  margin-top: 24px;
+  padding: clamp(16px, 3vw, 22px);
+  background: var(--bg-surface-subtle);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.summary-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.summary-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.summary-box-title {
+  font-size: clamp(14px, 2.5vw, 15.5px);
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.summary-box-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pkg-tag-badge {
+  background: linear-gradient(135deg, #0284c7, #0d9488);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+  white-space: nowrap;
+}
+
+.summary-cores-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+
+.summary-cores-table th {
+  background: var(--bg-surface-elevated);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border-light);
+  white-space: nowrap;
+}
+
+.summary-cores-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-main);
+}
+
+.summary-cores-table tr:last-child td {
+  border-bottom: none;
+}
+
+.summary-cores-table tr:hover td {
+  background: var(--primary-subtle);
+}
+
+.table-cores-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: linear-gradient(135deg, #0284c7, #06b6d4);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 13px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
 /* ==========================================
    PROMOTION SETTINGS MODAL STYLING
    ========================================== */

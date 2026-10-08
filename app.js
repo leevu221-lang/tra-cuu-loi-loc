@@ -65,6 +65,7 @@ const DOM = {
 
   // Year 1
   resY1Cores: document.getElementById('resY1Cores'),
+  featY1Cores: document.getElementById('featY1Cores'),
   tagY1Discount: document.getElementById('tagY1Discount'),
   wrapY1OldPrice: document.getElementById('wrapY1OldPrice'),
   resY1OldPrice: document.getElementById('resY1OldPrice'),
@@ -74,6 +75,7 @@ const DOM = {
 
   // Year 2
   resY2Cores: document.getElementById('resY2Cores'),
+  featY2Cores: document.getElementById('featY2Cores'),
   tagY2Discount: document.getElementById('tagY2Discount'),
   wrapY2OldPrice: document.getElementById('wrapY2OldPrice'),
   resY2OldPrice: document.getElementById('resY2OldPrice'),
@@ -83,6 +85,7 @@ const DOM = {
 
   // Year 3
   resY3Cores: document.getElementById('resY3Cores'),
+  featY3Cores: document.getElementById('featY3Cores'),
   tagY3Discount: document.getElementById('tagY3Discount'),
   wrapY3OldPrice: document.getElementById('wrapY3OldPrice'),
   resY3OldPrice: document.getElementById('resY3OldPrice'),
@@ -92,12 +95,17 @@ const DOM = {
 
   // Year 4
   resY4Cores: document.getElementById('resY4Cores'),
+  featY4Cores: document.getElementById('featY4Cores'),
   tagY4Discount: document.getElementById('tagY4Discount'),
   wrapY4OldPrice: document.getElementById('wrapY4OldPrice'),
   resY4OldPrice: document.getElementById('resY4OldPrice'),
   resY4Price: document.getElementById('resY4Price'),
   resY4Save: document.getElementById('resY4Save'),
   resY4Avg: document.getElementById('resY4Avg'),
+
+  // Package Cores Summary Table (Sheet GÓI THAY LLN)
+  summaryBoxPkgName: document.getElementById('summaryBoxPkgName'),
+  tableSummaryCoresBody: document.getElementById('tableSummaryCoresBody'),
 
   // Schedule
   scheduleSection: document.getElementById('scheduleSection'),
@@ -614,6 +622,15 @@ function displayProduct(product) {
     DOM.resY4Price, DOM.resY4Save, DOM.resY4Avg, pkgData.year4, promo.discountY4, 4
   );
 
+  // Update bottom card features core counts
+  if (DOM.featY1Cores) DOM.featY1Cores.textContent = `${pkgData.year1?.cores || 0} lõi lọc`;
+  if (DOM.featY2Cores) DOM.featY2Cores.textContent = `${pkgData.year2?.cores || 0} lõi lọc`;
+  if (DOM.featY3Cores) DOM.featY3Cores.textContent = `${pkgData.year3?.cores || 0} lõi lọc`;
+  if (DOM.featY4Cores) DOM.featY4Cores.textContent = `${pkgData.year4?.cores || 0} lõi lọc`;
+
+  // Render Cores Summary Table (Sheet GÓI THAY LLN)
+  renderCoresSummaryTable(pkgData, pkgName);
+
   // Render Core Schedule Details (From 'Thời gian thay lõi lọc')
   renderScheduleDetails(normPkg);
 
@@ -622,6 +639,58 @@ function displayProduct(product) {
 
   // Smooth scroll into result view
   DOM.productResultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderCoresSummaryTable(pkgData, pkgName) {
+  if (DOM.summaryBoxPkgName) {
+    DOM.summaryBoxPkgName.textContent = pkgName;
+  }
+  if (!DOM.tableSummaryCoresBody) return;
+
+  const promo = State.promotions;
+  const isPromo = promo.enabled;
+
+  const rows = [
+    { title: 'Gói 1 Năm', data: pkgData.year1, discount: promo.discountY1, yearNum: 1 },
+    { title: 'Gói 2 Năm', data: pkgData.year2, discount: promo.discountY2, yearNum: 2 },
+    { title: 'Gói 3 Năm', data: pkgData.year3, discount: promo.discountY3, yearNum: 3 },
+    { title: 'Gói 4 Năm', data: pkgData.year4, discount: promo.discountY4, yearNum: 4 }
+  ];
+
+  DOM.tableSummaryCoresBody.innerHTML = rows.map(r => {
+    const cores = r.data?.cores || 0;
+    const origP = r.data?.price || 0;
+    let finalP = origP;
+    let saveP = 0;
+    if (isPromo && r.discount > 0 && origP > 0) {
+      saveP = Math.round(origP * r.discount / 100);
+      finalP = origP - saveP;
+    }
+    const avg = r.yearNum === 1 
+      ? (cores > 0 ? Math.round(finalP / cores) : 0)
+      : Math.round(finalP / r.yearNum);
+    const avgText = r.yearNum === 1 ? `~${formatVND(avg)} ₫/lõi` : `~${formatVND(avg)} ₫/năm`;
+
+    return `
+      <tr>
+        <td><strong>${r.title}</strong></td>
+        <td class="text-center">
+          <span class="table-cores-badge">${cores} lõi lọc</span>
+        </td>
+        <td><strong style="color: var(--text-muted); font-family: var(--font-mono);">${formatVND(origP)} ₫</strong></td>
+        <td>
+          <strong style="color: ${saveP > 0 ? '#ef4444' : 'var(--text-main)'}; font-family: var(--font-mono); font-size: 14px;">
+            ${formatVND(finalP)} ₫
+          </strong>
+          ${saveP > 0 ? `<span class="badge" style="background: rgba(239,68,68,0.15); color: #ef4444; margin-left: 4px; font-size: 11px;">-${r.discount}%</span>` : ''}
+        </td>
+        <td>
+          ${saveP > 0 ? `<span class="save-tag" style="margin-bottom:0;">Tiết kiệm ${formatVND(saveP)} ₫</span>` : `<span style="color: var(--text-light);">-</span>`}
+        </td>
+        <td><span style="font-weight: 600; color: var(--text-muted);">${avgText}</span></td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function renderScheduleDetails(normPkg) {
