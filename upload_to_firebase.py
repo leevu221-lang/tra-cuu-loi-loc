@@ -48,29 +48,51 @@ def parse_and_upload():
             if not pkg_ref:
                 continue
             pkg_ref_str = str(pkg_ref).strip()
-            core_code = s_sch.cell(row=r, column=2).value
-            core_name = s_sch.cell(row=r, column=3).value
-            core_pos = s_sch.cell(row=r, column=4).value
-            replace_months = s_sch.cell(row=r, column=5).value
-            m1_3 = int(s_sch.cell(row=r, column=6).value or 0)
-            m4_6 = int(s_sch.cell(row=r, column=7).value or 0)
-            m7_9 = int(s_sch.cell(row=r, column=8).value or 0)
-            m10_12 = int(s_sch.cell(row=r, column=9).value or 0)
-
             norm_ref = ' '.join(pkg_ref_str.lower().split())
             if norm_ref not in schedule_map:
                 schedule_map[norm_ref] = []
             
-            code_val = str(int(core_code)) if isinstance(core_code, (int, float)) and core_code else str(core_code or '')
+            core_code = s_sch.cell(row=r, column=2).value
+            code_val = str(int(core_code)) if isinstance(core_code, (int, float)) and core_code else str(core_code or '').strip()
+            core_name = str(s_sch.cell(row=r, column=3).value or '').strip()
+            core_pos = s_sch.cell(row=r, column=4).value
+            pos_val = int(core_pos) if isinstance(core_pos, (int, float)) and core_pos else str(core_pos or '')
+            replace_months = s_sch.cell(row=r, column=5).value
+            interval_val = int(replace_months) if isinstance(replace_months, (int, float)) and replace_months else str(replace_months or '')
+
+            y1_q = [int(s_sch.cell(row=r, column=c).value or 0) for c in range(6, 10)]
+            y2_q = [int(s_sch.cell(row=r, column=c).value or 0) for c in range(10, 14)]
+            y3_q = [int(s_sch.cell(row=r, column=c).value or 0) for c in range(14, 18)]
+            y4_q = [int(s_sch.cell(row=r, column=c).value or 0) for c in range(18, 22)]
+
+            y1_cnt = int(s_sch.cell(row=r, column=22).value or 0)
+            y2_cnt = int(s_sch.cell(row=r, column=23).value or 0)
+            y3_cnt = int(s_sch.cell(row=r, column=24).value or 0)
+            y4_cnt = int(s_sch.cell(row=r, column=25).value or 0)
+            tot_4y = int(s_sch.cell(row=r, column=26).value or 0)
+
             schedule_map[norm_ref].append({
                 'code': code_val,
-                'name': str(core_name or '').strip(),
-                'position': int(core_pos) if isinstance(core_pos, (int, float)) and core_pos else str(core_pos or ''),
-                'intervalMonths': int(replace_months) if isinstance(replace_months, (int, float)) and replace_months else str(replace_months or ''),
-                'q1': m1_3,
-                'q2': m4_6,
-                'q3': m7_9,
-                'q4': m10_12,
+                'name': core_name,
+                'position': pos_val,
+                'intervalMonths': interval_val,
+                'y1_count': y1_cnt,
+                'y2_count': y2_cnt,
+                'y3_count': y3_cnt,
+                'y4_count': y4_cnt,
+                'y1_cumulative': y1_cnt,
+                'y2_cumulative': y1_cnt + y2_cnt,
+                'y3_cumulative': y1_cnt + y2_cnt + y3_cnt,
+                'y4_cumulative': tot_4y if tot_4y > 0 else (y1_cnt + y2_cnt + y3_cnt + y4_cnt),
+                'total_4y': tot_4y,
+                'y1_quarters': y1_q,
+                'y2_quarters': y2_q,
+                'y3_quarters': y3_q,
+                'y4_quarters': y4_q,
+                'q1': y1_q[0],
+                'q2': y1_q[1],
+                'q3': y1_q[2],
+                'q4': y1_q[3]
             })
     print(f"-> Đã nạp chi tiết lõi lọc cho {len(schedule_map)} loại gói.")
 

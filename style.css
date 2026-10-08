@@ -1288,7 +1288,7 @@ body.theme-dark .save-tag {
   color: var(--text-muted);
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   padding-top: 12px;
   border-top: 1px dashed var(--border-light);
 }
@@ -1316,6 +1316,122 @@ body.theme-dark .save-tag {
   padding: 2px 8px;
   border-radius: var(--radius-full);
   border: 1px solid var(--primary-border);
+}
+
+/* Specific Core Item from 'Thời gian thay lõi lọc' */
+.feat-core-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 5px 8px;
+  background: rgba(30, 136, 229, 0.04);
+  border-radius: 6px;
+  border-left: 3px solid var(--primary);
+  transition: all var(--transition-fast);
+}
+
+.feat-core-item:hover {
+  background: rgba(30, 136, 229, 0.09);
+  transform: translateX(2px);
+}
+
+.feat-core-bullet {
+  color: #10b981;
+  font-weight: 900;
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.feat-core-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.feat-core-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+  flex-wrap: wrap;
+  line-height: 1.35;
+}
+
+.feat-core-pos {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 11px;
+  background: var(--primary-subtle);
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.feat-core-name {
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 11.5px;
+  word-break: break-word;
+  flex: 1;
+  min-width: 140px;
+}
+
+.feat-core-qty-tag {
+  font-weight: 800;
+  color: #0284c7;
+  font-family: var(--font-mono);
+  background: #ffffff;
+  border: 1px solid rgba(2, 132, 199, 0.3);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.feat-core-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.feat-core-interval {
+  color: #d97706;
+  font-weight: 600;
+  background: rgba(217, 119, 6, 0.08);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+.feat-core-code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-light);
+  background: var(--bg-surface);
+  padding: 0 5px;
+  border-radius: 3px;
+  border: 1px solid var(--border-light);
+}
+
+/* Service Perk Item (Original bullet lines) */
+.feat-service-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+
+.feat-service-bullet {
+  color: #10b981;
+  font-weight: 800;
 }
 
 /* ==========================================

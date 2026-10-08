@@ -103,6 +103,12 @@ const DOM = {
   resY4Save: document.getElementById('resY4Save'),
   resY4Avg: document.getElementById('resY4Avg'),
 
+  // Card Features Lists (Sheet "Thời gian thay lõi lọc")
+  featListY1: document.getElementById('featListY1'),
+  featListY2: document.getElementById('featListY2'),
+  featListY3: document.getElementById('featListY3'),
+  featListY4: document.getElementById('featListY4'),
+
   // Package Cores Summary Table (Sheet GÓI THAY LLN)
   summaryBoxPkgName: document.getElementById('summaryBoxPkgName'),
   tableSummaryCoresBody: document.getElementById('tableSummaryCoresBody'),
@@ -622,23 +628,128 @@ function displayProduct(product) {
     DOM.resY4Price, DOM.resY4Save, DOM.resY4Avg, pkgData.year4, promo.discountY4, 4
   );
 
-  // Update bottom card features core counts
-  if (DOM.featY1Cores) DOM.featY1Cores.textContent = `${pkgData.year1?.cores || 0} lõi lọc`;
-  if (DOM.featY2Cores) DOM.featY2Cores.textContent = `${pkgData.year2?.cores || 0} lõi lọc`;
-  if (DOM.featY3Cores) DOM.featY3Cores.textContent = `${pkgData.year3?.cores || 0} lõi lọc`;
-  if (DOM.featY4Cores) DOM.featY4Cores.textContent = `${pkgData.year4?.cores || 0} lõi lọc`;
+  // Extract detailed cores from sheet 'Thời gian thay lõi lọc'
+  const cores = getCoresForProduct(product);
+
+  // Render dynamic card features (Sheet 'Thời gian thay lõi lọc' + Service perks)
+  renderAllCardFeatures(cores, pkgData);
 
   // Render Cores Summary Table (Sheet GÓI THAY LLN)
   renderCoresSummaryTable(pkgData, pkgName);
 
   // Render Core Schedule Details (From 'Thời gian thay lõi lọc')
-  renderScheduleDetails(normPkg);
+  renderScheduleDetails(cores);
 
-  // Generate Customer Quote Template with Promo Details
+  // Generate Customer Quote Template with Promo Details & Filter Core Details
   updateQuoteMessage(product, pkgData);
 
   // Smooth scroll into result view
   DOM.productResultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function getCoresForProduct(product) {
+  if (product && Array.isArray(product.coreSchedule) && product.coreSchedule.length > 0) {
+    return product.coreSchedule;
+  }
+  const pkgName = product?.packageName || '';
+  const rawKey = pkgName.toLowerCase().trim().replace(/\s+/g, ' ');
+  if (State.schedule && State.schedule[rawKey]) {
+    return State.schedule[rawKey];
+  }
+  const noTone = removeVietnameseTones(pkgName).trim();
+  if (State.schedule && State.schedule[noTone]) {
+    return State.schedule[noTone];
+  }
+  if (State.schedule) {
+    for (const [k, v] of Object.entries(State.schedule)) {
+      if (k.toLowerCase() === rawKey || removeVietnameseTones(k).trim() === noTone) {
+        return v;
+      }
+    }
+  }
+  return [];
+}
+
+function renderAllCardFeatures(cores, pkgData) {
+  renderSingleCardFeatures(DOM.featListY1, 1, pkgData?.year1, cores, [
+    "Miễn phí 100% công thợ ĐMX tới nhà",
+    "Kiểm tra chất lượng nước sau thay"
+  ]);
+  renderSingleCardFeatures(DOM.featListY2, 2, pkgData?.year2, cores, [
+    "Miễn phí công thợ ĐMX trọn gói 2 năm",
+    "Nhắc lịch tự động trước khi tới kỳ"
+  ]);
+  renderSingleCardFeatures(DOM.featListY3, 3, pkgData?.year3, cores, [
+    "Miễn phí công thợ ĐMX trọn gói 3 năm",
+    "Bảo dưỡng màng RO & áp lực bơm"
+  ]);
+  renderSingleCardFeatures(DOM.featListY4, 4, pkgData?.year4, cores, [
+    "Miễn phí công thợ ĐMX trọn đời 4 năm",
+    "Bảo dưỡng toàn diện máy trọn đời"
+  ]);
+}
+
+function renderSingleCardFeatures(container, yearNum, yearData, cores, perks) {
+  if (!container) return;
+  const totalCores = yearData?.cores || 0;
+
+  let html = `
+    <li class="feat-core-highlight">
+      <span>📦 Số lượng lõi thay:</span>
+      <strong class="badge-cores-count">${totalCores} lõi lọc</strong>
+    </li>
+  `;
+
+  if (cores && cores.length > 0) {
+    cores.forEach((c, idx) => {
+      let qty = 0;
+      if (yearNum === 1) qty = c.y1_cumulative || c.y1_count || 0;
+      else if (yearNum === 2) qty = c.y2_cumulative || ((c.y1_count || 0) + (c.y2_count || 0)) || 0;
+      else if (yearNum === 3) qty = c.y3_cumulative || ((c.y1_count || 0) + (c.y2_count || 0) + (c.y3_count || 0)) || 0;
+      else if (yearNum === 4) qty = c.y4_cumulative || c.total_4y || ((c.y1_count || 0) + (c.y2_count || 0) + (c.y3_count || 0) + (c.y4_count || 0)) || 0;
+
+      const posLabel = c.position ? `Lõi ${c.position}` : `Lõi ${idx + 1}`;
+      const intervalLabel = c.intervalMonths ? `Định kỳ ${c.intervalMonths} th` : 'Định kỳ chuẩn';
+      const codeLabel = c.code ? `<span class="feat-core-code" title="Mã linh kiện ĐMX: ${c.code}">Mã: ${c.code}</span>` : '';
+
+      html += `
+        <li class="feat-core-item" title="${c.name} - Thay định kỳ ${c.intervalMonths || '-'} tháng (Mã: ${c.code || '-'})">
+          <span class="feat-core-bullet">✓</span>
+          <div class="feat-core-content">
+            <div class="feat-core-title-row">
+              <span class="feat-core-pos">${posLabel}</span>
+              <span class="feat-core-name">${c.name}</span>
+              <span class="feat-core-qty-tag">x${qty} lõi</span>
+            </div>
+            <div class="feat-core-sub-row">
+              <span class="feat-core-interval">⏱️ ${intervalLabel}</span>
+              ${codeLabel}
+            </div>
+          </div>
+        </li>
+      `;
+    });
+  } else {
+    html += `
+      <li class="feat-service-item">
+        <span class="feat-service-bullet">✓</span>
+        <span>Thay thế định kỳ theo tiêu chuẩn hãng</span>
+      </li>
+    `;
+  }
+
+  if (perks && perks.length > 0) {
+    perks.forEach(p => {
+      html += `
+        <li class="feat-service-item">
+          <span class="feat-service-bullet">✓</span>
+          <span>${p}</span>
+        </li>
+      `;
+    });
+  }
+
+  container.innerHTML = html;
 }
 
 function renderCoresSummaryTable(pkgData, pkgName) {
@@ -693,8 +804,8 @@ function renderCoresSummaryTable(pkgData, pkgName) {
   }).join('');
 }
 
-function renderScheduleDetails(normPkg) {
-  const scheduleItems = State.schedule[normPkg] || [];
+function renderScheduleDetails(cores) {
+  const scheduleItems = (cores && cores.length > 0) ? cores : [];
   
   if (scheduleItems.length === 0) {
     DOM.scheduleSection.style.display = 'none';
@@ -760,6 +871,15 @@ function updateQuoteMessage(product, pkgData) {
       msg += `2️⃣ Gói 2 Năm (${pkgData.year2?.cores || 0} lõi): ${formatVND(pkgData.year2?.price)} ₫  ⭐(Khuyên dùng - Tiết kiệm)\n`;
       msg += `3️⃣ Gói 3 Năm (${pkgData.year3?.cores || 0} lõi): ${formatVND(pkgData.year3?.price)} ₫\n`;
       msg += `4️⃣ Gói 4 Năm (${pkgData.year4?.cores || 0} lõi): ${formatVND(pkgData.year4?.price)} ₫  👑(Gói bảo vệ trọn đời máy)\n\n`;
+    }
+
+    const cores = getCoresForProduct(product);
+    if (cores && cores.length > 0) {
+      msg += `🔩 DANH MỤC LÕI LỌC THAY THẾ (Sheet 'Thời gian thay lõi lọc'):\n`;
+      cores.forEach(c => {
+        msg += `  • Lõi ${c.position || '-'}: ${c.name} (Định kỳ ${c.intervalMonths || '-'} tháng - Mã ĐMX: ${c.code || '-'})\n`;
+      });
+      msg += `\n`;
     }
 
     msg += `✨ Quyền lợi khách hàng: Cam kết 100% lõi lọc chính hãng, thợ kỹ thuật ĐMX có mặt đúng hẹn, kiểm tra áp lực nước và đo TDS sau khi thay hoàn toàn miễn phí!`;
