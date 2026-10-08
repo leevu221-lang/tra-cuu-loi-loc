@@ -1609,9 +1609,10 @@ body.theme-dark .save-tag {
 }
 
 /* ==========================================
-   PACKAGE CORES SUMMARY SECTION (SHEET GÓI THAY LLN)
+   PACKAGE CORES SUMMARY SECTION (SHEET GÓI THAY LLN) - ẨN THEO YÊU CẦU
    ========================================== */
 .pkg-cores-summary-section {
+  display: none !important;
   margin-top: 24px;
   padding: clamp(16px, 3vw, 22px);
   background: var(--bg-surface-subtle);
