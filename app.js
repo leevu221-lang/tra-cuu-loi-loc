@@ -28,6 +28,7 @@ const DOM = {
   searchInput: document.getElementById('productSearchInput'),
   btnClearSearch: document.getElementById('btnClearSearch'),
   btnStartScan: document.getElementById('btnStartScan'),
+  btnMobileScanFab: document.getElementById('btnMobileScanFab'),
   suggestionsDropdown: document.getElementById('suggestionsDropdown'),
   sampleChips: document.querySelectorAll('.chip'),
   brandPills: document.querySelectorAll('.brand-pill'),
@@ -771,6 +772,9 @@ function setupEventListeners() {
 
   // Scanner modal triggers
   DOM.btnStartScan.addEventListener('click', openScannerModal);
+  if (DOM.btnMobileScanFab) {
+    DOM.btnMobileScanFab.addEventListener('click', openScannerModal);
+  }
   DOM.btnCloseScanner.addEventListener('click', closeScannerModal);
   DOM.scannerModal.addEventListener('click', (e) => {
     if (e.target === DOM.scannerModal) closeScannerModal();
