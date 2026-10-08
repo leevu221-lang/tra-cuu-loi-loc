@@ -2520,16 +2520,13 @@ body.theme-dark .status-yes {
     display: none; /* Hide label, keep only green pulse dot to save space */
   }
 
-  /* Search bar stack */
+  /* Search bar on Mobile: Ẩn button quét mã này vì đã có nút nổi .mobile-scan-fab */
   .search-bar-wrap {
-    flex-direction: column;
-    gap: 8px;
+    width: 100%;
   }
 
   .btn-scan-trigger {
-    width: 100%;
-    height: 48px;
-    justify-content: center;
+    display: none !important;
   }
 
   /* Section & Banner tighter spacing on Mobile */
