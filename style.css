@@ -1086,6 +1086,73 @@ body.theme-dark .alert-warning {
   color: var(--text-muted);
 }
 
+/* Pricing View Mode Switcher (Mobile 2x2 vs Detail) */
+.pricing-view-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  margin-bottom: 14px;
+}
+
+.view-mode-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.view-mode-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--primary);
+}
+
+.view-mode-pills {
+  display: inline-flex;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 3px;
+}
+
+.btn-view-mode {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all var(--transition-fast);
+}
+
+.btn-view-mode .mode-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.btn-view-mode:hover {
+  color: var(--primary);
+}
+
+.btn-view-mode.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(30, 136, 229, 0.35);
+}
+
 /* 4 Year Cards Grid */
 .year-cards-grid {
   display: grid;
@@ -1432,6 +1499,65 @@ body.theme-dark .save-tag {
 .feat-service-bullet {
   color: #10b981;
   font-weight: 800;
+}
+
+/* Card Features Details Drawer & Toggle Button */
+.feat-card-toggle-row {
+  list-style: none;
+  margin-top: 3px;
+  width: 100%;
+}
+
+.btn-card-toggle-details {
+  width: 100%;
+  background: rgba(30, 136, 229, 0.06);
+  border: 1px dashed rgba(30, 136, 229, 0.3);
+  border-radius: var(--radius-sm);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-card-toggle-details:hover {
+  background: rgba(30, 136, 229, 0.12);
+  border-color: var(--primary);
+}
+
+.btn-card-toggle-details .toggle-icon {
+  width: 12px;
+  height: 12px;
+  transition: transform var(--transition-fast);
+}
+
+.btn-card-toggle-details.is-active .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.feat-details-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+/* On Desktop: Always show details, hide mobile switcher bar and per-card toggle */
+@media (min-width: 769px) {
+  .pricing-view-mode-bar {
+    display: none !important;
+  }
+  .feat-details-drawer {
+    display: flex !important;
+  }
+  .feat-card-toggle-row {
+    display: none !important;
+  }
 }
 
 /* ==========================================
@@ -2406,25 +2532,185 @@ body.theme-dark .status-yes {
     justify-content: center;
   }
 
-  /* Year cards stack to 1 column */
+  /* Section & Banner tighter spacing on Mobile */
+  .pricing-grid-section {
+    padding: 12px 8px !important;
+  }
+  .section-title-wrap {
+    margin-bottom: 8px !important;
+  }
+  .promo-banner-wrap {
+    padding: 8px 10px !important;
+    margin-bottom: 8px !important;
+  }
+  .pricing-view-mode-bar {
+    padding: 6px 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* Year cards 2x2 Ultra-Compact Grid on Mobile */
   .year-cards-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
   }
 
   .year-card {
-    padding: 16px 14px;
+    padding: 14px 6px 7px 6px !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .card-badge-row {
+    top: -8px !important;
+    left: 4px !important;
+    right: 4px !important;
+    gap: 2px !important;
+  }
+
+  .card-badge {
+    font-size: 8px !important;
+    padding: 1px 3px !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  .card-discount-tag {
+    font-size: 8.5px !important;
+    padding: 1px 4px !important;
+    font-weight: 800 !important;
   }
 
   .year-card .card-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px !important;
+    margin-top: 2px !important;
+    margin-bottom: 3px !important;
   }
 
   .card-year-title {
-    margin-bottom: 0;
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .cores-pill {
+    font-size: 9px !important;
+    padding: 1px 4px !important;
+  }
+
+  .cores-pill svg {
+    width: 9px !important;
+    height: 9px !important;
+  }
+
+  .old-price-line {
+    font-size: 9px !important;
+    margin-bottom: 1px !important;
+  }
+
+  .card-price-wrap {
+    margin-bottom: 1px !important;
+  }
+
+  .price-figure {
+    font-size: 16.5px !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.3px !important;
+  }
+
+  .currency {
+    font-size: 10px !important;
+  }
+
+  .save-tag {
+    font-size: 8.5px !important;
+    padding: 1px 4px !important;
+    margin-bottom: 1px !important;
+    white-space: nowrap !important;
+  }
+
+  .price-subtext {
+    font-size: 9px !important;
+    margin-bottom: 3px !important;
+  }
+
+  .card-features {
+    padding-top: 4px !important;
+    gap: 2px !important;
+  }
+
+  .feat-core-highlight {
+    padding: 2px 4px !important;
+    font-size: 9px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .badge-cores-count {
+    font-size: 9px !important;
+    padding: 1px 4px !important;
+  }
+
+  .btn-card-toggle-details {
+    padding: 3px 6px !important;
+    font-size: 9px !important;
+    border-radius: 4px !important;
+  }
+
+  .btn-card-toggle-details .toggle-icon {
+    width: 10px !important;
+    height: 10px !important;
+  }
+
+  /* Compact Mode vs Detail on Mobile */
+  .year-cards-grid.compact-grid .feat-details-drawer {
+    display: none;
+  }
+
+  .year-cards-grid.compact-grid .feat-details-drawer.is-open {
+    display: flex;
+    margin-top: 4px;
+  }
+
+  .year-cards-grid.detailed-grid .feat-details-drawer {
+    display: flex;
+    margin-top: 4px;
+  }
+
+  .year-cards-grid.detailed-grid .feat-card-toggle-row {
+    display: none;
+  }
+
+  .feat-card-toggle-row {
+    display: block;
+  }
+
+  .feat-core-item {
+    padding: 3px 5px !important;
+    gap: 4px !important;
+  }
+
+  .feat-core-pos {
+    font-size: 9.5px !important;
+    padding: 0 3px !important;
+  }
+
+  .feat-core-name {
+    font-size: 10.5px !important;
+    min-width: 0 !important;
+  }
+
+  .feat-core-qty-tag {
+    font-size: 9.5px !important;
+    padding: 0 4px !important;
+  }
+
+  .feat-core-sub-row {
+    font-size: 9px !important;
+  }
+
+  .feat-service-item {
+    font-size: 10px !important;
+    padding: 1px 2px !important;
   }
 
   /* Product price row */
@@ -2453,27 +2739,31 @@ body.theme-dark .status-yes {
 /* 4. ULTRA-COMPACT MOBILE PHONES (<= 380px: iPhone SE, Galaxy Fold cover) */
 @media (max-width: 380px) {
   .container {
-    padding: 0 10px;
+    padding: 0 8px;
   }
 
   .brand-title {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .quick-action-buttons {
     grid-template-columns: 1fr;
   }
 
+  .year-cards-grid {
+    gap: 6px !important;
+  }
+
   .price-figure {
-    font-size: 22px;
+    font-size: 15.5px !important;
   }
 
   .card-year-title {
-    font-size: 15px;
+    font-size: 12px !important;
   }
 
   .search-card, .product-info-panel, .pricing-grid-section, .all-products-section {
-    padding: 14px 12px;
+    padding: 12px 8px;
   }
 }
 

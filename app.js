@@ -109,6 +109,12 @@ const DOM = {
   featListY3: document.getElementById('featListY3'),
   featListY4: document.getElementById('featListY4'),
 
+  // Mobile Grid View Switcher
+  yearCardsGrid: document.getElementById('yearCardsGrid'),
+  pricingViewModeBar: document.getElementById('pricingViewModeBar'),
+  btnModeCompact: document.getElementById('btnModeCompact'),
+  btnModeDetail: document.getElementById('btnModeDetail'),
+
   // Package Cores Summary Table (Sheet GÓI THAY LLN)
   summaryBoxPkgName: document.getElementById('summaryBoxPkgName'),
   tableSummaryCoresBody: document.getElementById('tableSummaryCoresBody'),
@@ -698,6 +704,15 @@ function renderSingleCardFeatures(container, yearNum, yearData, cores, perks) {
       <span>📦 Số lượng lõi thay:</span>
       <strong class="badge-cores-count">${totalCores} lõi lọc</strong>
     </li>
+    <li class="feat-card-toggle-row">
+      <button type="button" class="btn-card-toggle-details" data-target="detailsY${yearNum}">
+        <span>Chi tiết lõi</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="toggle-icon">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+    </li>
+    <div class="feat-details-drawer" id="detailsY${yearNum}">
   `;
 
   if (cores && cores.length > 0) {
@@ -748,6 +763,8 @@ function renderSingleCardFeatures(container, yearNum, yearData, cores, perks) {
       `;
     });
   }
+
+  html += `</div>`;
 
   container.innerHTML = html;
 }
@@ -1285,6 +1302,48 @@ function setupEventListeners() {
   DOM.btnSavePromoLocal.addEventListener('click', () => savePromoSettings(false));
   DOM.btnSavePromoFirebase.addEventListener('click', () => savePromoSettings(true));
   DOM.btnResetPromoDefaults.addEventListener('click', resetPromoDefaults);
+
+  // Mobile Grid View Switcher (2x2 Compact vs Detailed)
+  if (DOM.btnModeCompact && DOM.btnModeDetail && DOM.yearCardsGrid) {
+    DOM.btnModeCompact.addEventListener('click', () => {
+      DOM.btnModeCompact.classList.add('active');
+      DOM.btnModeDetail.classList.remove('active');
+      DOM.yearCardsGrid.classList.remove('detailed-grid');
+      DOM.yearCardsGrid.classList.add('compact-grid');
+
+      // Collapse all individual drawers
+      DOM.yearCardsGrid.querySelectorAll('.feat-details-drawer.is-open').forEach(el => el.classList.remove('is-open'));
+      DOM.yearCardsGrid.querySelectorAll('.btn-card-toggle-details.is-active').forEach(b => {
+        b.classList.remove('is-active');
+        const text = b.querySelector('span');
+        if (text) text.textContent = 'Chi tiết lõi';
+      });
+    });
+
+    DOM.btnModeDetail.addEventListener('click', () => {
+      DOM.btnModeDetail.classList.add('active');
+      DOM.btnModeCompact.classList.remove('active');
+      DOM.yearCardsGrid.classList.remove('compact-grid');
+      DOM.yearCardsGrid.classList.add('detailed-grid');
+    });
+
+    // Delegated click for individual card toggle button
+    DOM.yearCardsGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-card-toggle-details');
+      if (!btn) return;
+      e.preventDefault();
+      const targetId = btn.getAttribute('data-target');
+      const drawer = targetId ? document.getElementById(targetId) : btn.closest('.card-features')?.querySelector('.feat-details-drawer');
+      if (!drawer) return;
+
+      const isOpen = drawer.classList.toggle('is-open');
+      btn.classList.toggle('is-active', isOpen);
+      const textSpan = btn.querySelector('span');
+      if (textSpan) {
+        textSpan.textContent = isOpen ? 'Thu gọn' : 'Chi tiết lõi';
+      }
+    });
+  }
 
   // Toggle Schedule Accordion
   DOM.btnToggleSchedule.addEventListener('click', () => {

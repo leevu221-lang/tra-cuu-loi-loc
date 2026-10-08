@@ -282,8 +282,29 @@
             </div>
           </div>
 
-          <!-- 4 Cards Grid -->
-          <div class="year-cards-grid">
+          <!-- Mobile View Mode Switcher (2x2 Compact / Detailed) -->
+          <div class="pricing-view-mode-bar" id="pricingViewModeBar">
+            <span class="view-mode-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="view-mode-icon">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+              Giao diện Mobile:
+            </span>
+            <div class="view-mode-pills">
+              <button type="button" class="btn-view-mode active" id="btnModeCompact" title="Xem cùng lúc 4 gói siêu gọn trên 1 màn hình">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mode-icon"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Gọn 2x2 (Xem đủ 4 gói)</span>
+              </button>
+              <button type="button" class="btn-view-mode" id="btnModeDetail" title="Xem chi tiết danh sách từng lõi lọc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mode-icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                <span>Chi tiết từng lõi</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 4 Cards Grid (Hỗ trợ chế độ xem 2x2 siêu gọn trên mobile) -->
+          <div class="year-cards-grid compact-grid" id="yearCardsGrid">
             
             <!-- Card Year 1 -->
             <div class="year-card" id="cardYear1">
