@@ -89,6 +89,15 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
         </button>
+
+        <!-- Role Account Switcher Button (1 Button góc phải trên) -->
+        <button type="button" class="btn-role-badge role-staff" id="btnRoleToggle" title="Tài khoản hiện tại: Nhân viên (Bấm để chuyển sang Admin)">
+          <span class="role-badge-icon" id="roleBadgeIcon">👤</span>
+          <span class="role-badge-text" id="roleBadgeText">Nhân viên</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="role-arrow">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
       </div>
     </div>
   </header>
@@ -805,6 +814,83 @@
             Khôi Phục Chuẩn (10% - 15% - 20% - 25%)
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Switcher & Admin Auth Modal -->
+  <div class="modal-overlay" id="roleModal" style="display: none;">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="modal-icon">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <div>
+            <h3 class="modal-heading">Phân Quyền Tài Khoản</h3>
+            <p class="modal-subheading">Chuyển đổi quyền hạn Nhân viên / Quản trị viên</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" id="btnCloseRoleModal" title="Đóng">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="role-modal-hint">Chọn loại tài khoản truy cập hệ thống:</p>
+        <div class="role-select-cards">
+          <!-- Option Nhân viên -->
+          <div class="role-option-card active" id="optRoleStaff">
+            <div class="role-opt-left">
+              <span class="role-opt-icon">👤</span>
+              <div>
+                <h4 class="role-opt-title">Nhân viên (Mặc định)</h4>
+                <p class="role-opt-desc">Chỉ tra cứu thông tin máy & báo giá lõi. Không cần mật khẩu.</p>
+              </div>
+            </div>
+            <div class="role-opt-radio">✓</div>
+          </div>
+
+          <!-- Option Admin -->
+          <div class="role-option-card" id="optRoleAdmin">
+            <div class="role-opt-left">
+              <span class="role-opt-icon">🛡️</span>
+              <div>
+                <h4 class="role-opt-title">Quản trị viên (Admin)</h4>
+                <p class="role-opt-desc">Toàn quyền thiết lập thông số, cài đặt khuyến mãi & đồng bộ.</p>
+              </div>
+            </div>
+            <div class="role-opt-radio"></div>
+          </div>
+        </div>
+
+        <!-- Password input block (chỉ hiện khi chọn Admin) -->
+        <div class="admin-password-block" id="adminPasswordBlock" style="display: none;">
+          <label for="inputAdminPassword" class="form-label">
+            <span>Mật khẩu Admin:</span>
+            <span class="badge badge-required">Bắt buộc</span>
+          </label>
+          <div class="password-input-wrap">
+            <input 
+              type="password" 
+              id="inputAdminPassword" 
+              class="form-control" 
+              placeholder="Nhập mật khẩu Admin (43751)..." 
+              autocomplete="current-password"
+            />
+            <button type="button" class="btn-toggle-eye" id="btnToggleAdminPassEye" title="Hiện/ẩn mật khẩu">
+              👁️
+            </button>
+          </div>
+          <div class="form-error-msg" id="adminPasswordError" style="display: none; color: #ef4444; font-size: 12px; margin-top: 6px; font-weight: 600;">
+            ⚠️ Mật khẩu Admin không chính xác. Vui lòng thử lại!
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btnCancelRoleModal">Hủy</button>
+        <button class="btn btn-primary" id="btnConfirmRoleChange">
+          <span id="labelConfirmRole">Xác Nhận (Nhân viên)</span>
+        </button>
       </div>
     </div>
   </div>

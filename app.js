@@ -21,6 +21,8 @@ const State = {
   scannerInstance: null,
   isScanning: false,
   selectedCameraId: null,
+  // Role-Based Access Control (RBAC): 'staff' (Mặc định) hoặc 'admin' (Password: 43751)
+  currentRole: 'staff',
   // Promotion settings (Gói 1 năm: 10%, Gói 2 năm: 15%, Gói 3 năm: 20%, Gói 4 năm: 25%)
   promotions: {
     enabled: true,
@@ -31,6 +33,9 @@ const State = {
     discountY4: 25
   }
 };
+
+// Mật khẩu quản trị viên (Admin)
+const ADMIN_PASSWORD = '43751';
 
 // DOM Elements
 const DOM = {
@@ -167,6 +172,22 @@ const DOM = {
   btnThemeToggle: document.getElementById('btnThemeToggle'),
   toastContainer: document.getElementById('toastContainer'),
 
+  // Role Switcher & Admin Auth (1 Button góc phải trên)
+  btnRoleToggle: document.getElementById('btnRoleToggle'),
+  roleBadgeIcon: document.getElementById('roleBadgeIcon'),
+  roleBadgeText: document.getElementById('roleBadgeText'),
+  roleModal: document.getElementById('roleModal'),
+  btnCloseRoleModal: document.getElementById('btnCloseRoleModal'),
+  btnCancelRoleModal: document.getElementById('btnCancelRoleModal'),
+  optRoleStaff: document.getElementById('optRoleStaff'),
+  optRoleAdmin: document.getElementById('optRoleAdmin'),
+  adminPasswordBlock: document.getElementById('adminPasswordBlock'),
+  inputAdminPassword: document.getElementById('inputAdminPassword'),
+  adminPasswordError: document.getElementById('adminPasswordError'),
+  btnToggleAdminPassEye: document.getElementById('btnToggleAdminPassEye'),
+  btnConfirmRoleChange: document.getElementById('btnConfirmRoleChange'),
+  labelConfirmRole: document.getElementById('labelConfirmRole'),
+
   // Device Mode Switcher & Mobile Simulator
   deviceSwitchWrap: document.getElementById('deviceSwitchWrap'),
   btnSwitchDesktop: document.getElementById('btnSwitchDesktop'),
@@ -244,6 +265,14 @@ async function initData() {
   const isEmbed = urlParams.get('embed') === '1' || window.self !== window.top;
   if (isEmbed) {
     document.body.classList.add('is-embedded');
+  }
+
+  // Initialize Role (Staff as default, or saved admin session, or URL param)
+  const paramRole = urlParams.get('role');
+  if (paramRole && (paramRole === 'admin' || paramRole === 'staff')) {
+    applyRole(paramRole);
+  } else {
+    initRole();
   }
 
   // Load saved local promotions if exists
@@ -1139,10 +1168,164 @@ async function handleFileScan(e) {
 }
 
 // ==========================================
+// ROLE-BASED ACCESS CONTROL (RBAC) CONTROLLER
+// Roles: 'staff' (Nhân viên - Mặc định) & 'admin' (Admin - Mật khẩu: 43751)
+// Quyền hạn Nhân viên: Chỉ tra cứu, không có quyền thiết lập các thông số khác (như khuyến mãi)
+// ==========================================
+
+let selectedRoleInModal = 'staff';
+
+function initRole() {
+  const savedRole = localStorage.getItem('tra_cuu_role') || 'staff';
+  applyRole(savedRole);
+}
+
+function applyRole(role) {
+  const isTargetAdmin = (role === 'admin');
+  State.currentRole = isTargetAdmin ? 'admin' : 'staff';
+  localStorage.setItem('tra_cuu_role', State.currentRole);
+
+  // Cập nhật class trên body để CSS ẩn/hiện và khóa quyền
+  document.body.classList.remove('role-staff', 'role-admin');
+  document.body.classList.add(isTargetAdmin ? 'role-admin' : 'role-staff');
+
+  // Cập nhật 1 button góc phải trên
+  if (DOM.btnRoleToggle) {
+    DOM.btnRoleToggle.classList.remove('role-staff', 'role-admin');
+    DOM.btnRoleToggle.classList.add(isTargetAdmin ? 'role-admin' : 'role-staff');
+    DOM.btnRoleToggle.title = isTargetAdmin 
+      ? 'Tài khoản: Quản trị viên (Admin) - Toàn quyền thiết lập (Bấm để đổi)' 
+      : 'Tài khoản: Nhân viên - Chỉ tra cứu thông tin (Bấm để chuyển sang Admin)';
+  }
+
+  if (DOM.roleBadgeIcon) {
+    DOM.roleBadgeIcon.textContent = isTargetAdmin ? '🛡️' : '👤';
+  }
+
+  if (DOM.roleBadgeText) {
+    DOM.roleBadgeText.textContent = isTargetAdmin ? 'Admin' : 'Nhân viên';
+  }
+
+  // Khóa công tắc khuyến mãi khi ở quyền Nhân viên
+  if (DOM.togglePromoActive) {
+    DOM.togglePromoActive.disabled = !isTargetAdmin;
+  }
+}
+
+function openRoleModal() {
+  if (!DOM.roleModal) return;
+  selectedRoleInModal = State.currentRole || 'staff';
+  updateRoleModalUI();
+
+  if (DOM.inputAdminPassword) {
+    DOM.inputAdminPassword.value = '';
+    DOM.inputAdminPassword.type = 'password';
+    DOM.inputAdminPassword.classList.remove('input-shake');
+  }
+  if (DOM.adminPasswordError) {
+    DOM.adminPasswordError.style.display = 'none';
+  }
+  if (DOM.btnToggleAdminPassEye) {
+    DOM.btnToggleAdminPassEye.textContent = '👁️';
+  }
+
+  DOM.roleModal.style.display = 'flex';
+
+  if (selectedRoleInModal === 'admin' && DOM.inputAdminPassword) {
+    setTimeout(() => DOM.inputAdminPassword.focus(), 100);
+  }
+}
+
+function closeRoleModal() {
+  if (!DOM.roleModal) return;
+  DOM.roleModal.style.display = 'none';
+  if (DOM.inputAdminPassword) {
+    DOM.inputAdminPassword.value = '';
+    DOM.inputAdminPassword.classList.remove('input-shake');
+  }
+  if (DOM.adminPasswordError) {
+    DOM.adminPasswordError.style.display = 'none';
+  }
+}
+
+function selectRoleOption(role) {
+  selectedRoleInModal = role;
+  updateRoleModalUI();
+}
+
+function updateRoleModalUI() {
+  const isStaff = (selectedRoleInModal === 'staff');
+
+  if (DOM.optRoleStaff && DOM.optRoleAdmin) {
+    DOM.optRoleStaff.classList.toggle('active', isStaff);
+    DOM.optRoleAdmin.classList.toggle('active', !isStaff);
+
+    const staffRadio = DOM.optRoleStaff.querySelector('.role-opt-radio');
+    const adminRadio = DOM.optRoleAdmin.querySelector('.role-opt-radio');
+    if (staffRadio) staffRadio.textContent = isStaff ? '✓' : '';
+    if (adminRadio) adminRadio.textContent = !isStaff ? '✓' : '';
+  }
+
+  if (DOM.adminPasswordBlock) {
+    DOM.adminPasswordBlock.style.display = isStaff ? 'none' : 'block';
+  }
+
+  if (DOM.adminPasswordError) {
+    DOM.adminPasswordError.style.display = 'none';
+  }
+
+  if (DOM.labelConfirmRole) {
+    DOM.labelConfirmRole.textContent = isStaff ? 'Xác Nhận (Nhân viên)' : 'Đăng Nhập Admin';
+  }
+
+  if (!isStaff && DOM.inputAdminPassword) {
+    setTimeout(() => DOM.inputAdminPassword.focus(), 80);
+  }
+}
+
+function handleConfirmRole() {
+  if (selectedRoleInModal === 'admin') {
+    const enteredPass = DOM.inputAdminPassword?.value || '';
+    if (enteredPass.trim() === ADMIN_PASSWORD) {
+      applyRole('admin');
+      closeRoleModal();
+      showToast('🛡️ Xác thực Admin thành công! Đã cấp toàn quyền thiết lập hệ thống.', 'success');
+    } else {
+      if (DOM.adminPasswordError) {
+        DOM.adminPasswordError.style.display = 'block';
+      }
+      if (DOM.inputAdminPassword) {
+        DOM.inputAdminPassword.classList.add('input-shake');
+        setTimeout(() => DOM.inputAdminPassword.classList.remove('input-shake'), 400);
+        DOM.inputAdminPassword.select();
+      }
+    }
+  } else {
+    // Tài khoản Nhân viên: không cần mật khẩu
+    applyRole('staff');
+    closeRoleModal();
+    showToast('👤 Đã chuyển sang tài khoản Nhân viên (Quyền tra cứu thông tin).', 'info');
+  }
+}
+
+function toggleAdminPasswordEye() {
+  if (!DOM.inputAdminPassword) return;
+  const isPass = (DOM.inputAdminPassword.type === 'password');
+  DOM.inputAdminPassword.type = isPass ? 'text' : 'password';
+  if (DOM.btnToggleAdminPassEye) {
+    DOM.btnToggleAdminPassEye.textContent = isPass ? '🙈' : '👁️';
+  }
+}
+
+// ==========================================
 // PROMOTION MODAL & SETTINGS MANAGEMENT
 // ==========================================
 
 function openPromoSettingsModal() {
+  if (State.currentRole !== 'admin') {
+    showToast('⚠️ Bạn cần quyền Quản trị viên (Admin) để cài đặt khuyến mãi!', 'error');
+    return;
+  }
   const p = State.promotions;
   DOM.inputPromoName.value = p.programName || "Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX";
   DOM.inputDiscountY1.value = p.discountY1 ?? 10;
@@ -1157,6 +1340,10 @@ function closePromoSettingsModal() {
 }
 
 function savePromoSettings(isSaveFirebase = false) {
+  if (State.currentRole !== 'admin') {
+    showToast('⚠️ Nhân viên chỉ có quyền tra cứu, không thể thiết lập thông số!', 'error');
+    return;
+  }
   const name = DOM.inputPromoName.value.trim() || "Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX";
   const y1 = Math.min(90, Math.max(0, parseInt(DOM.inputDiscountY1.value) || 0));
   const y2 = Math.min(90, Math.max(0, parseInt(DOM.inputDiscountY2.value) || 0));
@@ -1216,6 +1403,10 @@ async function pushPromotionsToFirebase(p) {
 }
 
 function resetPromoDefaults() {
+  if (State.currentRole !== 'admin') {
+    showToast('⚠️ Nhân viên không có quyền đặt lại thông số khuyến mãi!', 'error');
+    return;
+  }
   DOM.inputPromoName.value = "Chương Trình Ưu Đãi Thay Lõi Thợ ĐMX";
   DOM.inputDiscountY1.value = 10;
   DOM.inputDiscountY2.value = 15;
@@ -1235,7 +1426,7 @@ function openMobileSimulator() {
   if (window.self !== window.top || document.body.classList.contains('is-embedded')) return;
 
   const currentCode = State.currentProduct?.code || (DOM.searchInput?.value.trim() || '1114171000203');
-  const targetUrl = `index.html?code=${encodeURIComponent(currentCode)}&embed=1`;
+  const targetUrl = `index.html?code=${encodeURIComponent(currentCode)}&embed=1&role=${encodeURIComponent(State.currentRole || 'staff')}`;
 
   DOM.simIframe.src = targetUrl;
   DOM.simModalOverlay.style.display = 'flex';
@@ -1391,8 +1582,14 @@ function setupEventListeners() {
     syncFromFirebase(true);
   });
 
-  // Toggle Promotion Switch
+  // Toggle Promotion Switch (Chỉ Admin mới có quyền bật/tắt)
   DOM.togglePromoActive.addEventListener('change', (e) => {
+    if (State.currentRole !== 'admin') {
+      e.preventDefault();
+      DOM.togglePromoActive.checked = State.promotions.enabled;
+      showToast('⚠️ Nhân viên chỉ có quyền tra cứu, không thể bật/tắt khuyến mãi!', 'error');
+      return;
+    }
     State.promotions.enabled = e.target.checked;
     localStorage.setItem('tra_cuu_promotions', JSON.stringify(State.promotions));
     if (State.activeProduct) {
@@ -1412,6 +1609,46 @@ function setupEventListeners() {
   DOM.btnSavePromoLocal.addEventListener('click', () => savePromoSettings(false));
   DOM.btnSavePromoFirebase.addEventListener('click', () => savePromoSettings(true));
   DOM.btnResetPromoDefaults.addEventListener('click', resetPromoDefaults);
+
+  // Role Switcher & Modal Events (1 Button góc phải trên)
+  if (DOM.btnRoleToggle) {
+    DOM.btnRoleToggle.addEventListener('click', openRoleModal);
+  }
+  if (DOM.btnCloseRoleModal) {
+    DOM.btnCloseRoleModal.addEventListener('click', closeRoleModal);
+  }
+  if (DOM.btnCancelRoleModal) {
+    DOM.btnCancelRoleModal.addEventListener('click', closeRoleModal);
+  }
+  if (DOM.roleModal) {
+    DOM.roleModal.addEventListener('click', (e) => {
+      if (e.target === DOM.roleModal) closeRoleModal();
+    });
+  }
+  if (DOM.optRoleStaff) {
+    DOM.optRoleStaff.addEventListener('click', () => selectRoleOption('staff'));
+  }
+  if (DOM.optRoleAdmin) {
+    DOM.optRoleAdmin.addEventListener('click', () => selectRoleOption('admin'));
+  }
+  if (DOM.btnConfirmRoleChange) {
+    DOM.btnConfirmRoleChange.addEventListener('click', handleConfirmRole);
+  }
+  if (DOM.btnToggleAdminPassEye) {
+    DOM.btnToggleAdminPassEye.addEventListener('click', toggleAdminPasswordEye);
+  }
+  if (DOM.inputAdminPassword) {
+    DOM.inputAdminPassword.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleConfirmRole();
+      }
+    });
+    DOM.inputAdminPassword.addEventListener('input', () => {
+      if (DOM.adminPasswordError) DOM.adminPasswordError.style.display = 'none';
+      DOM.inputAdminPassword.classList.remove('input-shake');
+    });
+  }
 
   // Mobile Grid View Switcher (2x2 Compact vs Detailed)
   if (DOM.btnModeCompact && DOM.btnModeDetail && DOM.yearCardsGrid) {

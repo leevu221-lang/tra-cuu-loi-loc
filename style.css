@@ -3178,3 +3178,277 @@ body.is-embedded .app-header {
   padding-top: 20px;
 }
 
+/* ==========================================================================
+   ROLE-BASED ACCESS CONTROL (RBAC) STYLING & PERMISSION RULES
+   Admin (Password: 43751) vs Staff (Tra cứu không mật khẩu)
+   ========================================================================== */
+
+/* 1 Role Switcher Button in Header (Góc phải trên) */
+.btn-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+  border: 1.5px solid transparent;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  white-space: nowrap;
+}
+
+/* Staff Theme (Nhân viên - Mặc định) */
+.btn-role-badge.role-staff {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.28);
+  color: #0284c7;
+}
+body.theme-dark .btn-role-badge.role-staff {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+.btn-role-badge.role-staff:hover {
+  background: rgba(2, 132, 199, 0.16);
+  border-color: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(2, 132, 199, 0.2);
+}
+
+/* Admin Theme (Quản trị viên) */
+.btn-role-badge.role-admin {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(249, 115, 22, 0.14));
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #dc2626;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.16);
+}
+body.theme-dark .btn-role-badge.role-admin {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.22));
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #f87171;
+}
+.btn-role-badge.role-admin:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(249, 115, 22, 0.25));
+  border-color: #ef4444;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.role-badge-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.role-badge-text {
+  letter-spacing: -0.2px;
+}
+
+.role-arrow {
+  width: 13px;
+  height: 13px;
+  opacity: 0.65;
+  transition: transform var(--transition-fast);
+}
+.btn-role-badge:hover .role-arrow {
+  transform: translateY(1.5px);
+  opacity: 1;
+}
+
+/* Role Modal Styling */
+.modal-card.modal-sm {
+  max-width: 440px;
+}
+
+.role-modal-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.role-select-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.role-option-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-surface-subtle);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.role-option-card:hover {
+  border-color: var(--primary);
+  background: rgba(2, 132, 199, 0.04);
+}
+
+.role-option-card.active {
+  border-color: var(--primary);
+  background: rgba(2, 132, 199, 0.08);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.role-option-card#optRoleAdmin.active {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  box-shadow: 0 0 0 1px #ef4444;
+}
+
+.role-opt-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.role-opt-icon {
+  font-size: 26px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.role-opt-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.role-opt-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.role-opt-radio {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  transition: all var(--transition-fast);
+}
+
+.role-option-card.active .role-opt-radio {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.role-option-card#optRoleAdmin.active .role-opt-radio {
+  border-color: #ef4444;
+  background: #ef4444;
+}
+
+/* Admin Password Input Field */
+.admin-password-block {
+  margin-top: 14px;
+  padding: 14px;
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px dashed rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-md);
+  animation: fadeIn 0.2s ease;
+}
+
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrap .form-control {
+  width: 100%;
+  padding-right: 42px;
+}
+
+.btn-toggle-eye {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-toggle-eye:hover {
+  color: var(--text-main);
+}
+
+.badge-required {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+.modal-footer {
+  padding: 14px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--border-light);
+  flex-shrink: 0;
+  background: var(--bg-surface-subtle);
+}
+
+/* Shake animation for incorrect password */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.input-shake {
+  animation: shake 0.35s ease-in-out;
+  border-color: #ef4444 !important;
+}
+
+/* ==========================================================================
+   STRICT PERMISSION RESTRICTIONS FOR STAFF (NHÂN VIÊN)
+   Quyền hạn Nhân viên: CHỈ TRA CỨU, KHÔNG ĐƯỢC THIẾT LẬP CÁC THÔNG SỐ KHÁC
+   NHƯ CÀI ĐẶT KHUYẾN MÃI.
+   ========================================================================== */
+body.role-staff #btnOpenPromoSettings,
+body.role-staff .btn-promo-edit {
+  display: none !important;
+}
+
+body.role-staff .promo-switch-label {
+  pointer-events: none !important;
+  opacity: 0.65;
+  cursor: not-allowed !important;
+}
+
+body.role-staff #btnTriggerFirebaseReload {
+  display: none !important;
+}
+body.role-staff .sync-actions-group {
+  display: none !important;
+}
+
