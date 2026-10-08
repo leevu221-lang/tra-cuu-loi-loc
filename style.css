@@ -1815,9 +1815,10 @@ body.theme-dark .status-yes {
 }
 
 /* ==========================================
-   ALL PRODUCTS DRAWER / TABLE SECTION
+   ALL PRODUCTS DRAWER / TABLE SECTION (ẨN THEO YÊU CẦU)
    ========================================== */
 .all-products-section {
+  display: none;
   background: var(--bg-surface);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-xl);
