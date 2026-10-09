@@ -339,14 +339,15 @@
             </div>
           </div>
 
-          <!-- 4 Cards Grid (Hỗ trợ chế độ xem 2x2 siêu gọn trên mobile) -->
+          <!-- 4 Cards Grid (Hỗ trợ chế độ xem 2x2 siêu gọn trên mobile & Bấm chọn gói để làm nổi bật) -->
           <div class="year-cards-grid compact-grid" id="yearCardsGrid">
             
             <!-- Card Year 1 -->
-            <div class="year-card" id="cardYear1">
+            <div class="year-card" id="cardYear1" data-year="1" role="button" tabindex="0" title="Bấm để chọn Gói 1 Năm & xem chi tiết chu kỳ thay">
               <div class="card-badge-row">
                 <span class="card-badge">Kỳ Hạn Ngắn</span>
                 <span class="card-discount-tag" id="tagY1Discount">-10%</span>
+                <span class="card-selected-tag" id="selTagY1" style="display: none;">✓ Đang Chọn</span>
               </div>
               <div class="card-header">
                 <h4 class="card-year-title">Gói 1 Năm</h4>
@@ -378,14 +379,19 @@
                   <li class="feat-service-item"><span class="feat-service-bullet">✓</span> Miễn phí công thợ ĐMX tới nhà</li>
                   <li class="feat-service-item"><span class="feat-service-bullet">✓</span> Kiểm tra chất lượng nước sau thay</li>
                 </ul>
+                <button type="button" class="btn-select-package-action" id="btnSelectY1" data-year="1">
+                  <span class="btn-select-icon">✓</span>
+                  <span class="btn-select-text">Chọn Gói 1 Năm</span>
+                </button>
               </div>
             </div>
 
             <!-- Card Year 2 -->
-            <div class="year-card highlight-card" id="cardYear2">
+            <div class="year-card highlight-card selected-package" id="cardYear2" data-year="2" role="button" tabindex="0" title="Bấm để chọn Gói 2 Năm & xem chi tiết chu kỳ thay">
               <div class="card-badge-row">
                 <span class="card-badge badge-popular">Phổ Biến Nhất</span>
                 <span class="card-discount-tag tag-popular" id="tagY2Discount">-15%</span>
+                <span class="card-selected-tag" id="selTagY2">✓ Đang Chọn</span>
               </div>
               <div class="card-header">
                 <h4 class="card-year-title">Gói 2 Năm</h4>
@@ -417,14 +423,19 @@
                   <li class="feat-service-item"><span class="feat-service-bullet">✓</span> Đầy đủ các đợt thay thô & chức năng</li>
                   <li class="feat-service-item"><span class="feat-service-bullet">✓</span> Nhắc lịch tự động trước khi tới kỳ</li>
                 </ul>
+                <button type="button" class="btn-select-package-action is-selected" id="btnSelectY2" data-year="2">
+                  <span class="btn-select-icon">✓</span>
+                  <span class="btn-select-text">Đang Chọn Gói Này</span>
+                </button>
               </div>
             </div>
 
             <!-- Card Year 3 -->
-            <div class="year-card" id="cardYear3">
+            <div class="year-card" id="cardYear3" data-year="3" role="button" tabindex="0" title="Bấm để chọn Gói 3 Năm & xem chi tiết chu kỳ thay">
               <div class="card-badge-row">
                 <span class="card-badge">Tối Ưu RO</span>
                 <span class="card-discount-tag" id="tagY3Discount">-20%</span>
+                <span class="card-selected-tag" id="selTagY3" style="display: none;">✓ Đang Chọn</span>
               </div>
               <div class="card-header">
                 <h4 class="card-year-title">Gói 3 Năm</h4>
@@ -456,14 +467,19 @@
                   <li class="feat-service-item"><span class="feat-service-bullet">✓</span> Tiết kiệm chi phí so với mua lẻ</li>
                   <li class="feat-service-item"><span class="feat-service-bullet">✓</span> Kỹ thuật viên bảo dưỡng áp lực bơm</li>
                 </ul>
+                <button type="button" class="btn-select-package-action" id="btnSelectY3" data-year="3">
+                  <span class="btn-select-icon">✓</span>
+                  <span class="btn-select-text">Chọn Gói 3 Năm</span>
+                </button>
               </div>
             </div>
 
             <!-- Card Year 4 -->
-            <div class="year-card premium-card" id="cardYear4">
+            <div class="year-card premium-card" id="cardYear4" data-year="4" role="button" tabindex="0" title="Bấm để chọn Gói 4 Năm & xem chi tiết chu kỳ thay">
               <div class="card-badge-row">
                 <span class="card-badge badge-premium">Trọn Đời Máy</span>
                 <span class="card-discount-tag tag-premium" id="tagY4Discount">-25%</span>
+                <span class="card-selected-tag" id="selTagY4" style="display: none;">✓ Đang Chọn</span>
               </div>
               <div class="card-header">
                 <h4 class="card-year-title">Gói 4 Năm</h4>
@@ -495,6 +511,10 @@
                   <li class="feat-service-item"><span class="feat-service-bullet">✓</span> Thay thế đầy đủ bộ lõi thô + RO + khoáng</li>
                   <li class="feat-service-item"><span class="feat-service-bullet">✓</span> Giá tốt nhất trên mỗi lần thay</li>
                 </ul>
+                <button type="button" class="btn-select-package-action" id="btnSelectY4" data-year="4">
+                  <span class="btn-select-icon">✓</span>
+                  <span class="btn-select-text">Chọn Gói 4 Năm</span>
+                </button>
               </div>
             </div>
 
@@ -538,8 +558,8 @@
 
         </div>
 
-        <!-- Detailed Core Replacement Schedule Table (Bonus from sheet "Thời gian thay lõi lọc") -->
-        <div class="schedule-section" id="scheduleSection">
+        <!-- Detailed Core Replacement Schedule Table (Hiển thị động theo gói được chọn) -->
+        <div class="schedule-section open" id="scheduleSection">
           <div class="schedule-header" id="btnToggleSchedule">
             <div class="sched-title-wrap">
               <svg class="sched-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -550,8 +570,8 @@
                 <polyline points="10 9 9 9 8 9"></polyline>
               </svg>
               <div>
-                <h4 class="sched-title">Chi Tiết Lõi Lọc & Chu Kỳ Thay Của Gói</h4>
-                <p class="sched-subtitle">Xem danh sách mã lõi, vị trí lắp và lịch thay theo từng quý trong năm</p>
+                <h4 class="sched-title" id="schedSectionTitle">Chi Tiết Lõi Lọc & Chu Kỳ Thay Của Gói</h4>
+                <p class="sched-subtitle" id="schedSectionSub">Xem danh sách mã lõi, vị trí lắp và lịch thay theo gói đang chọn</p>
               </div>
             </div>
             <div class="accordion-arrow">
@@ -560,9 +580,39 @@
           </div>
 
           <div class="schedule-body" id="scheduleBody">
+            <!-- Package Selection Pills in Schedule Section -->
+            <div class="schedule-package-switcher">
+              <span class="switcher-label">Xem lịch thay theo gói:</span>
+              <div class="sched-pills-group" id="schedPillsGroup">
+                <button type="button" class="sched-pill-btn" data-year="1" id="schedPill1">
+                  <span>Gói 1 Năm</span>
+                  <span class="sched-pill-count" id="schedPillCount1">(4 lõi)</span>
+                </button>
+                <button type="button" class="sched-pill-btn active" data-year="2" id="schedPill2">
+                  <span>Gói 2 Năm</span>
+                  <span class="sched-pill-count" id="schedPillCount2">(8 lõi)</span>
+                  <span class="sched-pill-tag">Phổ biến</span>
+                </button>
+                <button type="button" class="sched-pill-btn" data-year="3" id="schedPill3">
+                  <span>Gói 3 Năm</span>
+                  <span class="sched-pill-count" id="schedPillCount3">(14 lõi)</span>
+                </button>
+                <button type="button" class="sched-pill-btn" data-year="4" id="schedPill4">
+                  <span>Gói 4 Năm</span>
+                  <span class="sched-pill-count" id="schedPillCount4">(18 lõi)</span>
+                  <span class="sched-pill-tag tag-best">Trọn đời</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Summary callout banner for the active package schedule -->
+            <div class="sched-package-callout" id="schedPackageCallout">
+              <!-- Rendered dynamically -->
+            </div>
+
             <div class="table-responsive">
-              <table class="schedule-table">
-                <thead>
+              <table class="schedule-table" id="scheduleTable">
+                <thead id="scheduleTableHead">
                   <tr>
                     <th>Vị trí</th>
                     <th>Mã Lõi</th>
@@ -577,6 +627,9 @@
                 <tbody id="scheduleTableBody">
                   <!-- Rendered dynamically -->
                 </tbody>
+                <tfoot id="scheduleTableFoot">
+                  <!-- Rendered dynamically -->
+                </tfoot>
               </table>
             </div>
           </div>
@@ -587,7 +640,7 @@
           <div class="quote-header">
             <div class="quote-title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-              Mẫu Tin Nhắn Tư Vấn Báo Giá (Sẵn Sàng Gửi Khách Hàng)
+              <span id="quoteTitleText">Mẫu Tin Nhắn Tư Vấn Báo Giá - Gói 2 Năm (Sẵn Sàng Gửi Khách Hàng)</span>
             </div>
             <button class="btn btn-outline btn-xs" id="btnCopyQuoteDirect">Sao chép nhanh</button>
           </div>

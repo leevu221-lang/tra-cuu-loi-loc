@@ -1302,6 +1302,93 @@ body.theme-dark .alert-warning {
   box-shadow: 0 4px 18px rgba(16, 185, 129, 0.12);
 }
 
+/* ==========================================
+   SELECTED PACKAGE HIGHLIGHT (GÓI ĐƯỢC CHỌN)
+   ========================================== */
+.year-card {
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+.year-card:focus-visible {
+  box-shadow: 0 0 0 3px var(--primary);
+}
+
+.year-card.selected-package {
+  border-color: #0284c7 !important;
+  border-width: 2.5px !important;
+  background: linear-gradient(180deg, var(--bg-surface), rgba(2, 132, 199, 0.09)) !important;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.22), 0 14px 28px -6px rgba(2, 132, 199, 0.3) !important;
+  transform: translateY(-5px);
+  z-index: 2;
+}
+
+body.theme-dark .year-card.selected-package {
+  border-color: #38bdf8 !important;
+  background: linear-gradient(180deg, #1e293b, rgba(56, 189, 248, 0.15)) !important;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.28), 0 14px 28px -6px rgba(0, 0, 0, 0.5) !important;
+}
+
+.year-card.selected-package .card-year-title {
+  color: var(--primary) !important;
+}
+
+/* Card Selected Tag Badge */
+.card-selected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #0284c7, #06b6d4);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.45);
+  letter-spacing: 0.2px;
+  animation: pulse-badge 2s infinite ease-in-out;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Button Select Package Action at Bottom of Card */
+.btn-select-package-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 10px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: var(--bg-surface-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  user-select: none;
+}
+.btn-select-package-action:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-subtle);
+}
+.btn-select-package-action.is-selected {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.35);
+}
+.btn-select-package-action .btn-select-icon {
+  font-weight: 900;
+  font-size: 13px;
+}
+
 .card-header {
   margin-bottom: 12px;
 }
@@ -1887,6 +1974,178 @@ body.theme-dark .save-tag {
 }
 .schedule-section.open .schedule-body {
   display: block;
+}
+
+/* Schedule Package Switcher Pills */
+.schedule-package-switcher {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.switcher-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.sched-pills-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sched-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--border-light);
+  background: var(--bg-surface-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+.sched-pill-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.sched-pill-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+}
+.sched-pill-count {
+  font-size: 11px;
+  opacity: 0.85;
+}
+.sched-pill-tag {
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  color: inherit;
+}
+.sched-pill-btn:not(.active) .sched-pill-tag {
+  background: var(--border-light);
+  color: var(--text-muted);
+}
+.sched-pill-btn:not(.active) .sched-pill-tag.tag-best {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+/* Callout banner */
+.sched-package-callout {
+  margin-bottom: 14px;
+}
+.sched-package-callout .callout-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--primary-subtle);
+  border-left: 4px solid var(--primary);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+.sched-package-callout .callout-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Badges in Schedule table */
+.badge-sched-cores {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--primary-subtle);
+  color: var(--primary);
+  font-weight: 700;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.th-sub {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.core-pos-tag {
+  color: var(--text-main);
+  white-space: nowrap;
+}
+.core-code-tag {
+  font-family: var(--font-mono);
+  color: var(--primary);
+  font-size: 12px;
+  background: var(--bg-surface-subtle);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+}
+.badge-interval {
+  background: var(--bg-surface-subtle);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.badge-total-core {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--primary);
+  background: var(--primary-subtle);
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.sched-badges-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.core-sched-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 11px;
+  border-radius: 4px;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.core-sched-badge strong {
+  color: var(--text-main);
+}
+.table-foot-total-row {
+  background: var(--bg-surface-subtle);
+  border-top: 2px solid var(--border-light);
+  font-size: 13px;
+}
+.table-foot-total-row td {
+  padding: 10px 12px;
+}
+.highlight-grand-total {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 900;
+  color: var(--primary);
+  background: var(--primary-subtle);
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 /* Table Responsive Container */
@@ -2712,6 +2971,28 @@ body.theme-dark .status-yes {
   .btn-card-toggle-details .toggle-icon {
     width: 10px !important;
     height: 10px !important;
+  }
+
+  .btn-select-package-action {
+    padding: 5px 6px !important;
+    font-size: 10px !important;
+    margin-top: 5px !important;
+    border-radius: var(--radius-sm) !important;
+  }
+
+  .card-selected-tag {
+    font-size: 8px !important;
+    padding: 1px 4px !important;
+  }
+
+  .schedule-package-switcher {
+    gap: 5px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .sched-pill-btn {
+    padding: 3px 8px !important;
+    font-size: 11px !important;
   }
 
   /* Compact Mode vs Detail on Mobile */

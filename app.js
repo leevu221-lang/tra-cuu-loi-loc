@@ -23,6 +23,8 @@ const State = {
   selectedCameraId: null,
   // Role-Based Access Control (RBAC): 'staff' (Mặc định) hoặc 'admin' (Password: 43751)
   currentRole: 'staff',
+  // Gói thời hạn đang chọn (1, 2, 3, 4) - Mặc định là Gói 2 Năm (Phổ biến nhất)
+  selectedYear: 2,
   // Promotion settings (Gói 1 năm: 10%, Gói 2 năm: 15%, Gói 3 năm: 20%, Gói 4 năm: 25%)
   promotions: {
     enabled: true,
@@ -120,6 +122,12 @@ const DOM = {
   btnModeCompact: document.getElementById('btnModeCompact'),
   btnModeDetail: document.getElementById('btnModeDetail'),
 
+  // Package Cards
+  cardYear1: document.getElementById('cardYear1'),
+  cardYear2: document.getElementById('cardYear2'),
+  cardYear3: document.getElementById('cardYear3'),
+  cardYear4: document.getElementById('cardYear4'),
+
   // Package Cores Summary Table (Sheet GÓI THAY LLN)
   summaryBoxPkgName: document.getElementById('summaryBoxPkgName'),
   tableSummaryCoresBody: document.getElementById('tableSummaryCoresBody'),
@@ -127,9 +135,15 @@ const DOM = {
   // Schedule
   scheduleSection: document.getElementById('scheduleSection'),
   btnToggleSchedule: document.getElementById('btnToggleSchedule'),
+  schedSectionTitle: document.getElementById('schedSectionTitle'),
+  schedSectionSub: document.getElementById('schedSectionSub'),
+  schedPackageCallout: document.getElementById('schedPackageCallout'),
+  scheduleTableHead: document.getElementById('scheduleTableHead'),
   scheduleTableBody: document.getElementById('scheduleTableBody'),
+  scheduleTableFoot: document.getElementById('scheduleTableFoot'),
 
   // Quote & Actions
+  quoteTitleText: document.getElementById('quoteTitleText'),
   quotePreviewText: document.getElementById('quotePreviewText'),
   btnCopyQuote: document.getElementById('btnCopyQuote'),
   btnCopyQuoteDirect: document.getElementById('btnCopyQuoteDirect'),
@@ -707,11 +721,8 @@ function displayProduct(product) {
   // Render Cores Summary Table (Sheet GÓI THAY LLN)
   renderCoresSummaryTable(pkgData, pkgName);
 
-  // Render Core Schedule Details (From 'Thời gian thay lõi lọc')
-  renderScheduleDetails(cores);
-
-  // Generate Customer Quote Template with Promo Details & Filter Core Details
-  updateQuoteMessage(product, pkgData);
+  // Kích hoạt hiển thị gói được chọn (Mặc định Gói 2 Năm) & đồng bộ lịch thay + mẫu tư vấn
+  selectPackageYear(State.selectedYear || 2, false);
 
   // Smooth scroll into result view
   DOM.productResultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -885,85 +896,521 @@ function renderCoresSummaryTable(pkgData, pkgName) {
   }).join('');
 }
 
-function renderScheduleDetails(cores) {
+function selectPackageYear(yearNum, scrollIntoSchedule = false) {
+  State.selectedYear = Number(yearNum) || 2;
+  const product = State.activeProduct;
+  if (!product) return;
+  const pkgData = product.packagePricing || (State.packages ? State.packages[product.packageName] : null);
+  const cores = getCoresForProduct(product);
+
+  // 1. Highlight the chosen card, un-highlight others
+  [1, 2, 3, 4].forEach(y => {
+    const card = document.getElementById(`cardYear${y}`);
+    const selTag = document.getElementById(`selTagY${y}`);
+    const btnSelect = document.getElementById(`btnSelectY${y}`);
+    const isSelected = (y === State.selectedYear);
+
+    if (card) {
+      card.classList.toggle('selected-package', isSelected);
+      card.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+    }
+    if (selTag) {
+      selTag.style.display = isSelected ? 'inline-flex' : 'none';
+    }
+    if (btnSelect) {
+      btnSelect.classList.toggle('is-selected', isSelected);
+      btnSelect.innerHTML = isSelected 
+        ? `<span class="btn-select-icon">✓</span><span class="btn-select-text">Đang Chọn Gói Này</span>`
+        : `<span class="btn-select-icon">✓</span><span class="btn-select-text">Chọn Gói ${y} Năm</span>`;
+    }
+  });
+
+  // 2. Update pills in schedule section
+  [1, 2, 3, 4].forEach(y => {
+    const pill = document.getElementById(`schedPill${y}`);
+    if (pill) {
+      pill.classList.toggle('active', y === State.selectedYear);
+    }
+  });
+
+  // 3. Render Schedule Details dynamically for the chosen package
+  renderScheduleDetails(cores, State.selectedYear);
+
+  // 4. Update Customer Consultation Quote Message for the chosen package
+  updateQuoteMessage(product, pkgData, State.selectedYear);
+
+  // 5. Ensure schedule section accordion is open so user sees the schedule immediately
+  if (DOM.scheduleSection) {
+    DOM.scheduleSection.classList.add('open');
+  }
+
+  if (scrollIntoSchedule && DOM.scheduleSection) {
+    DOM.scheduleSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function renderScheduleDetails(cores, selectedYear = State.selectedYear || 2) {
   const scheduleItems = (cores && cores.length > 0) ? cores : [];
   
   if (scheduleItems.length === 0) {
-    DOM.scheduleSection.style.display = 'none';
+    if (DOM.scheduleSection) DOM.scheduleSection.style.display = 'none';
     return;
   }
 
-  DOM.scheduleSection.style.display = 'block';
-  DOM.scheduleTableBody.innerHTML = scheduleItems.map(item => `
-    <tr>
-      <td><strong>Lõi số ${item.position || '-'}</strong></td>
-      <td><code style="font-family: var(--font-mono); color: var(--primary);">${item.code || '-'}</code></td>
-      <td><strong>${item.name}</strong></td>
-      <td><span class="badge" style="background: var(--bg-surface-subtle);">${item.intervalMonths} tháng</span></td>
-      <td class="text-center">${item.q1 > 0 ? `<span class="status-check status-yes">${item.q1} cái</span>` : `<span class="status-no">-</span>`}</td>
-      <td class="text-center">${item.q2 > 0 ? `<span class="status-check status-yes">${item.q2} cái</span>` : `<span class="status-no">-</span>`}</td>
-      <td class="text-center">${item.q3 > 0 ? `<span class="status-check status-yes">${item.q3} cái</span>` : `<span class="status-no">-</span>`}</td>
-      <td class="text-center">${item.q4 > 0 ? `<span class="status-check status-yes">${item.q4} cái</span>` : `<span class="status-no">-</span>`}</td>
-    </tr>
-  `).join('');
+  if (DOM.scheduleSection) DOM.scheduleSection.style.display = 'block';
+
+  const product = State.activeProduct;
+  const pkgData = product?.packagePricing || (product?.packageName && State.packages ? State.packages[product.packageName] : null);
+  const pkgYear = pkgData ? pkgData[`year${selectedYear}`] : null;
+  const totalPkgCores = pkgYear?.cores || 0;
+
+  // Update Section Title & Subtitle
+  const schedSectionTitle = DOM.schedSectionTitle || document.getElementById('schedSectionTitle');
+  const schedSectionSub = DOM.schedSectionSub || document.getElementById('schedSectionSub');
+  const schedPackageCallout = DOM.schedPackageCallout || document.getElementById('schedPackageCallout');
+
+  const yearNames = {
+    1: 'Gói 1 Năm',
+    2: 'Gói 2 Năm',
+    3: 'Gói 3 Năm',
+    4: 'Gói 4 Năm'
+  };
+
+  const periodMonths = selectedYear * 12;
+
+  if (schedSectionTitle) {
+    schedSectionTitle.innerHTML = `Chi Tiết Lõi Lọc & Chu Kỳ Thay - ${yearNames[selectedYear]} <span class="badge-sched-cores">${totalPkgCores} lõi lọc</span>`;
+  }
+  if (schedSectionSub) {
+    schedSectionSub.textContent = `Lịch thay thế chi tiết ${totalPkgCores} lõi lọc theo từng đợt trong suốt kỳ hạn ${selectedYear} năm (${periodMonths} tháng)`;
+  }
+
+  // Update pill counts in the schedule section if available
+  [1, 2, 3, 4].forEach(y => {
+    const pillCount = document.getElementById(`schedPillCount${y}`);
+    if (pillCount && pkgData && pkgData[`year${y}`]) {
+      pillCount.textContent = `(${pkgData[`year${y}`].cores} lõi)`;
+    }
+  });
+
+  // Render Callout Banner
+  if (schedPackageCallout) {
+    let calloutText = '';
+    if (selectedYear === 1) {
+      calloutText = `<strong>Gói 1 Năm (12 tháng):</strong> Thay thế ${totalPkgCores} lõi lọc định kỳ năm đầu. Phù hợp cho khách hàng muốn trải nghiệm dịch vụ. Miễn phí 100% công thợ ĐMX tới nhà.`;
+    } else if (selectedYear === 2) {
+      calloutText = `<strong>Gói 2 Năm (24 tháng) ⭐:</strong> Thay thế ${totalPkgCores} lõi lọc toàn diện (thô + chức năng). Gói phổ biến nhất, đảm bảo nguồn nước luôn tinh khiết chuẩn Bộ Y Tế.`;
+    } else if (selectedYear === 3) {
+      calloutText = `<strong>Gói 3 Năm (36 tháng):</strong> Thay thế ${totalPkgCores} lõi lọc trong 3 năm. Bao trọn chu kỳ màng lọc RO trái tim của máy, tiết kiệm hơn so với mua lẻ từng đợt.`;
+    } else if (selectedYear === 4) {
+      calloutText = `<strong>Gói 4 Năm (48 tháng) 👑:</strong> Thay thế ${totalPkgCores} lõi lọc trọn đời máy. Giải pháp an tâm tối đa 48 tháng với chi phí bình quân trên mỗi lõi và mỗi lần thay là thấp nhất.`;
+    }
+    schedPackageCallout.innerHTML = `
+      <div class="callout-inner">
+        <span class="callout-icon">💡</span>
+        <div class="callout-text">${calloutText}</div>
+      </div>
+    `;
+  }
+
+  // Helper to format quarters string from array [q1, q2, q3, q4]
+  function formatQuartersBadges(qArray, yearLabel) {
+    if (!Array.isArray(qArray)) return '';
+    const active = [];
+    qArray.forEach((qty, idx) => {
+      if (qty > 0) active.push(`Q${idx + 1}${qty > 1 ? `(x${qty})` : ''}`);
+    });
+    if (active.length === 0) return `<span class="status-no">-</span>`;
+    return `<span class="core-sched-badge" title="${yearLabel}: Thay vào ${active.join(', ')}"><strong>${yearLabel}:</strong> ${active.join(', ')}</span>`;
+  }
+
+  const tableHead = DOM.scheduleTableHead || document.getElementById('scheduleTableHead');
+  const tableBody = DOM.scheduleTableBody || document.getElementById('scheduleTableBody');
+  const tableFoot = DOM.scheduleTableFoot || document.getElementById('scheduleTableFoot');
+
+  if (!tableBody) return;
+
+  if (selectedYear === 1) {
+    // Year 1: Show 4 Quarters: Q1 (Tháng 1-3), Q2 (Tháng 4-6), Q3 (Tháng 7-9), Q4 (Tháng 10-12)
+    if (tableHead) {
+      tableHead.innerHTML = `
+        <tr>
+          <th style="width: 70px;">Vị trí</th>
+          <th style="width: 120px;">Mã Lõi</th>
+          <th>Tên Lõi Lọc</th>
+          <th style="width: 90px;">Chu Kỳ</th>
+          <th class="text-center" style="width: 90px;">Quý 1<br><span class="th-sub">Tháng 1-3</span></th>
+          <th class="text-center" style="width: 90px;">Quý 2<br><span class="th-sub">Tháng 4-6</span></th>
+          <th class="text-center" style="width: 90px;">Quý 3<br><span class="th-sub">Tháng 7-9</span></th>
+          <th class="text-center" style="width: 90px;">Quý 4<br><span class="th-sub">Tháng 10-12</span></th>
+          <th class="text-center" style="width: 110px;">Tổng Lõi<br><span class="th-sub">Gói 1 Năm</span></th>
+        </tr>
+      `;
+    }
+
+    let sumQ1 = 0, sumQ2 = 0, sumQ3 = 0, sumQ4 = 0, sumTotal = 0;
+
+    tableBody.innerHTML = scheduleItems.map(item => {
+      const q = item.y1_quarters || [item.q1 || 0, item.q2 || 0, item.q3 || 0, item.q4 || 0];
+      const q1 = q[0] || 0;
+      const q2 = q[1] || 0;
+      const q3 = q[2] || 0;
+      const q4 = q[3] || 0;
+      const totalCore = item.y1_cumulative || item.y1_count || (q1 + q2 + q3 + q4);
+
+      sumQ1 += q1;
+      sumQ2 += q2;
+      sumQ3 += q3;
+      sumQ4 += q4;
+      sumTotal += totalCore;
+
+      return `
+        <tr>
+          <td><strong class="core-pos-tag">Lõi số ${item.position || '-'}</strong></td>
+          <td><code class="core-code-tag">${item.code || '-'}</code></td>
+          <td>
+            <div class="core-name-cell">
+              <strong>${item.name}</strong>
+            </div>
+          </td>
+          <td><span class="badge badge-interval">${item.intervalMonths} tháng</span></td>
+          <td class="text-center">${q1 > 0 ? `<span class="status-check status-yes">${q1} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">${q2 > 0 ? `<span class="status-check status-yes">${q2} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">${q3 > 0 ? `<span class="status-check status-yes">${q3} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">${q4 > 0 ? `<span class="status-check status-yes">${q4} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">
+            <span class="badge-total-core">${totalCore} cái</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    if (tableFoot) {
+      tableFoot.innerHTML = `
+        <tr class="table-foot-total-row">
+          <td colspan="4"><strong>TỔNG SỐ LÕI THAY THẾ (NĂM 1):</strong></td>
+          <td class="text-center"><strong>${sumQ1 > 0 ? `${sumQ1} cái` : '-'}</strong></td>
+          <td class="text-center"><strong>${sumQ2 > 0 ? `${sumQ2} cái` : '-'}</strong></td>
+          <td class="text-center"><strong>${sumQ3 > 0 ? `${sumQ3} cái` : '-'}</strong></td>
+          <td class="text-center"><strong>${sumQ4 > 0 ? `${sumQ4} cái` : '-'}</strong></td>
+          <td class="text-center"><strong class="highlight-grand-total">${totalPkgCores || sumTotal} LÕI LỌC</strong></td>
+        </tr>
+      `;
+    }
+  } else if (selectedYear === 2) {
+    // Year 2: Show Năm 1, Năm 2, Lịch chi tiết theo quý, Tổng Gói 2 Năm
+    if (tableHead) {
+      tableHead.innerHTML = `
+        <tr>
+          <th style="width: 70px;">Vị trí</th>
+          <th style="width: 120px;">Mã Lõi</th>
+          <th>Tên Lõi Lọc</th>
+          <th style="width: 90px;">Chu Kỳ</th>
+          <th class="text-center" style="width: 95px;">Năm 1<br><span class="th-sub">12 tháng đầu</span></th>
+          <th class="text-center" style="width: 95px;">Năm 2<br><span class="th-sub">12 tháng tiếp</span></th>
+          <th style="min-width: 170px;">Chi Tiết Các Đợt Thay (Quý)</th>
+          <th class="text-center" style="width: 110px;">Tổng Lõi<br><span class="th-sub">Gói 2 Năm</span></th>
+        </tr>
+      `;
+    }
+
+    let sumY1 = 0, sumY2 = 0, sumTotal = 0;
+
+    tableBody.innerHTML = scheduleItems.map(item => {
+      const y1 = item.y1_count || 0;
+      const y2 = item.y2_count || 0;
+      const totalCore = item.y2_cumulative || (y1 + y2);
+
+      sumY1 += y1;
+      sumY2 += y2;
+      sumTotal += totalCore;
+
+      const schedY1 = formatQuartersBadges(item.y1_quarters, 'Năm 1');
+      const schedY2 = formatQuartersBadges(item.y2_quarters, 'Năm 2');
+
+      return `
+        <tr>
+          <td><strong class="core-pos-tag">Lõi số ${item.position || '-'}</strong></td>
+          <td><code class="core-code-tag">${item.code || '-'}</code></td>
+          <td>
+            <div class="core-name-cell">
+              <strong>${item.name}</strong>
+            </div>
+          </td>
+          <td><span class="badge badge-interval">${item.intervalMonths} tháng</span></td>
+          <td class="text-center">${y1 > 0 ? `<span class="status-check status-yes">${y1} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">${y2 > 0 ? `<span class="status-check status-yes">${y2} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td>
+            <div class="sched-badges-wrap">
+              ${schedY1}
+              ${schedY2}
+            </div>
+          </td>
+          <td class="text-center">
+            <span class="badge-total-core">${totalCore} cái</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    if (tableFoot) {
+      tableFoot.innerHTML = `
+        <tr class="table-foot-total-row">
+          <td colspan="4"><strong>TỔNG SỐ LÕI THAY THẾ (GÓI 2 NĂM):</strong></td>
+          <td class="text-center"><strong>${sumY1} cái</strong></td>
+          <td class="text-center"><strong>${sumY2} cái</strong></td>
+          <td><span style="color: var(--text-muted); font-size: 12px;">Bảo dưỡng định kỳ 24 tháng trọn gói</span></td>
+          <td class="text-center"><strong class="highlight-grand-total">${totalPkgCores || sumTotal} LÕI LỌC</strong></td>
+        </tr>
+      `;
+    }
+  } else if (selectedYear === 3) {
+    // Year 3: Show Năm 1, Năm 2, Năm 3, Chi tiết, Tổng Gói 3 Năm
+    if (tableHead) {
+      tableHead.innerHTML = `
+        <tr>
+          <th style="width: 70px;">Vị trí</th>
+          <th style="width: 120px;">Mã Lõi</th>
+          <th>Tên Lõi Lọc</th>
+          <th style="width: 90px;">Chu Kỳ</th>
+          <th class="text-center" style="width: 85px;">Năm 1</th>
+          <th class="text-center" style="width: 85px;">Năm 2</th>
+          <th class="text-center" style="width: 85px;">Năm 3</th>
+          <th style="min-width: 180px;">Chi Tiết Các Đợt Thay</th>
+          <th class="text-center" style="width: 110px;">Tổng Lõi<br><span class="th-sub">Gói 3 Năm</span></th>
+        </tr>
+      `;
+    }
+
+    let sumY1 = 0, sumY2 = 0, sumY3 = 0, sumTotal = 0;
+
+    tableBody.innerHTML = scheduleItems.map(item => {
+      const y1 = item.y1_count || 0;
+      const y2 = item.y2_count || 0;
+      const y3 = item.y3_count || 0;
+      const totalCore = item.y3_cumulative || (y1 + y2 + y3);
+
+      sumY1 += y1;
+      sumY2 += y2;
+      sumY3 += y3;
+      sumTotal += totalCore;
+
+      const schedY1 = formatQuartersBadges(item.y1_quarters, 'N1');
+      const schedY2 = formatQuartersBadges(item.y2_quarters, 'N2');
+      const schedY3 = formatQuartersBadges(item.y3_quarters, 'N3');
+
+      return `
+        <tr>
+          <td><strong class="core-pos-tag">Lõi số ${item.position || '-'}</strong></td>
+          <td><code class="core-code-tag">${item.code || '-'}</code></td>
+          <td>
+            <div class="core-name-cell">
+              <strong>${item.name}</strong>
+            </div>
+          </td>
+          <td><span class="badge badge-interval">${item.intervalMonths} tháng</span></td>
+          <td class="text-center">${y1 > 0 ? `<span class="status-check status-yes">${y1} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">${y2 > 0 ? `<span class="status-check status-yes">${y2} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">${y3 > 0 ? `<span class="status-check status-yes">${y3} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td>
+            <div class="sched-badges-wrap">
+              ${schedY1} ${schedY2} ${schedY3}
+            </div>
+          </td>
+          <td class="text-center">
+            <span class="badge-total-core">${totalCore} cái</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    if (tableFoot) {
+      tableFoot.innerHTML = `
+        <tr class="table-foot-total-row">
+          <td colspan="4"><strong>TỔNG SỐ LÕI THAY THẾ (GÓI 3 NĂM):</strong></td>
+          <td class="text-center"><strong>${sumY1} cái</strong></td>
+          <td class="text-center"><strong>${sumY2} cái</strong></td>
+          <td class="text-center"><strong>${sumY3} cái</strong></td>
+          <td><span style="color: var(--text-muted); font-size: 12px;">Chu kỳ 36 tháng bao gồm màng RO</span></td>
+          <td class="text-center"><strong class="highlight-grand-total">${totalPkgCores || sumTotal} LÕI LỌC</strong></td>
+        </tr>
+      `;
+    }
+  } else if (selectedYear === 4) {
+    // Year 4: Show Năm 1, Năm 2, Năm 3, Năm 4, Chi tiết, Tổng Gói 4 Năm
+    if (tableHead) {
+      tableHead.innerHTML = `
+        <tr>
+          <th style="width: 70px;">Vị trí</th>
+          <th style="width: 120px;">Mã Lõi</th>
+          <th>Tên Lõi Lọc</th>
+          <th style="width: 90px;">Chu Kỳ</th>
+          <th class="text-center" style="width: 75px;">Năm 1</th>
+          <th class="text-center" style="width: 75px;">Năm 2</th>
+          <th class="text-center" style="width: 75px;">Năm 3</th>
+          <th class="text-center" style="width: 75px;">Năm 4</th>
+          <th style="min-width: 180px;">Chi Tiết Các Đợt Thay</th>
+          <th class="text-center" style="width: 110px;">Tổng Lõi<br><span class="th-sub">Gói 4 Năm</span></th>
+        </tr>
+      `;
+    }
+
+    let sumY1 = 0, sumY2 = 0, sumY3 = 0, sumY4 = 0, sumTotal = 0;
+
+    tableBody.innerHTML = scheduleItems.map(item => {
+      const y1 = item.y1_count || 0;
+      const y2 = item.y2_count || 0;
+      const y3 = item.y3_count || 0;
+      const y4 = item.y4_count || 0;
+      const totalCore = item.y4_cumulative || item.total_4y || (y1 + y2 + y3 + y4);
+
+      sumY1 += y1;
+      sumY2 += y2;
+      sumY3 += y3;
+      sumY4 += y4;
+      sumTotal += totalCore;
+
+      const schedY1 = formatQuartersBadges(item.y1_quarters, 'N1');
+      const schedY2 = formatQuartersBadges(item.y2_quarters, 'N2');
+      const schedY3 = formatQuartersBadges(item.y3_quarters, 'N3');
+      const schedY4 = formatQuartersBadges(item.y4_quarters, 'N4');
+
+      return `
+        <tr>
+          <td><strong class="core-pos-tag">Lõi số ${item.position || '-'}</strong></td>
+          <td><code class="core-code-tag">${item.code || '-'}</code></td>
+          <td>
+            <div class="core-name-cell">
+              <strong>${item.name}</strong>
+            </div>
+          </td>
+          <td><span class="badge badge-interval">${item.intervalMonths} tháng</span></td>
+          <td class="text-center">${y1 > 0 ? `<span class="status-check status-yes">${y1} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">${y2 > 0 ? `<span class="status-check status-yes">${y2} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">${y3 > 0 ? `<span class="status-check status-yes">${y3} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td class="text-center">${y4 > 0 ? `<span class="status-check status-yes">${y4} cái</span>` : `<span class="status-no">-</span>`}</td>
+          <td>
+            <div class="sched-badges-wrap">
+              ${schedY1} ${schedY2} ${schedY3} ${schedY4}
+            </div>
+          </td>
+          <td class="text-center">
+            <span class="badge-total-core">${totalCore} cái</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    if (tableFoot) {
+      tableFoot.innerHTML = `
+        <tr class="table-foot-total-row">
+          <td colspan="4"><strong>TỔNG SỐ LÕI THAY THẾ (GÓI 4 NĂM):</strong></td>
+          <td class="text-center"><strong>${sumY1} cái</strong></td>
+          <td class="text-center"><strong>${sumY2} cái</strong></td>
+          <td class="text-center"><strong>${sumY3} cái</strong></td>
+          <td class="text-center"><strong>${sumY4} cái</strong></td>
+          <td><span style="color: var(--text-muted); font-size: 12px;">Bảo vệ trọn đời máy 48 tháng</span></td>
+          <td class="text-center"><strong class="highlight-grand-total">${totalPkgCores || sumTotal} LÕI LỌC</strong></td>
+        </tr>
+      `;
+    }
+  }
 }
 
-function updateQuoteMessage(product, pkgData) {
+function updateQuoteMessage(product, pkgData, selectedYear = State.selectedYear || 2) {
   if (!product) return;
   const promo = State.promotions;
   const isPromo = promo.enabled;
-  
-  let msg = `Kính gửi Quý khách, Dịch vụ Thợ Điện Máy Xanh xin gửi báo giá gói thay lõi lọc nước chính hãng cho thiết bị:\n\n`;
-  msg += `🏷️ Thiết bị: ${product.name}\n`;
+
+  const yearNum = Number(selectedYear) || 2;
+  const yearKey = `year${yearNum}`;
+  const curPkg = pkgData ? pkgData[yearKey] : null;
+  const origPrice = curPkg?.price || 0;
+  const discountPercent = isPromo ? (promo[`discountY${yearNum}`] || 0) : 0;
+  const savePrice = isPromo && discountPercent > 0 ? Math.round(origPrice * discountPercent / 100) : 0;
+  const finalPrice = origPrice - savePrice;
+  const totalCores = curPkg?.cores || 0;
+
+  const avgPerYear = yearNum > 1 ? Math.round(finalPrice / yearNum) : finalPrice;
+  const avgPerCore = totalCores > 0 ? Math.round(finalPrice / totalCores) : 0;
+
+  // Update header title in the quote preview card
+  const quoteTitleText = DOM.quoteTitleText || document.getElementById('quoteTitleText');
+  if (quoteTitleText) {
+    quoteTitleText.textContent = `Mẫu Tin Nhắn Tư Vấn Báo Giá - Gói ${yearNum} Năm (Sẵn Sàng Gửi Khách Hàng)`;
+  }
+
+  let msg = `Kính gửi Quý khách, Dịch vụ Thợ Điện Máy Xanh xin gửi báo giá tư vấn gói thay lõi lọc nước chính hãng cho thiết bị:\n\n`;
+  msg += `🏷️ THIẾT BỊ: ${product.name}\n`;
   msg += `🔢 Mã sản phẩm: ${product.code}\n`;
   msg += `🏢 Hãng sản xuất: ${product.brand}\n`;
   msg += `📦 Gói thay lõi áp dụng: ${product.packageName}\n\n`;
 
-  if (pkgData) {
-    if (isPromo) {
-      msg += `🔥 CHƯƠNG TRÌNH KHUYẾN MÃI: ${promo.programName.toUpperCase()} (ĐÃ BAO GỒM CÔNG THỢ TẬN NHÀ):\n`;
-      
-      // Y1
-      const p1 = pkgData.year1?.price || 0;
-      const s1 = Math.round(p1 * promo.discountY1 / 100);
-      const f1 = p1 - s1;
-      msg += `1️⃣ Gói 1 Năm (${pkgData.year1?.cores || 0} lõi): ${formatVND(f1)} ₫  (Giá gốc: ${formatVND(p1)} ₫ - Giảm ${promo.discountY1}%, Tiết kiệm ${formatVND(s1)} ₫)\n`;
+  if (curPkg) {
+    msg += `⭐ ===================================== ⭐\n`;
+    let subPkgTitle = '';
+    if (yearNum === 2) subPkgTitle = '  ⭐(Gói phổ biến nhất - Tiết kiệm & Toàn diện)';
+    else if (yearNum === 4) subPkgTitle = '  👑(Gói trọn đời máy - Tối ưu chi phí nhất)';
+    else if (yearNum === 3) subPkgTitle = '  🛡️(Bao trọn chu kỳ màng lọc RO)';
+    else if (yearNum === 1) subPkgTitle = '  ⚡(Kỳ hạn trải nghiệm 12 tháng)';
 
-      // Y2
-      const p2 = pkgData.year2?.price || 0;
-      const s2 = Math.round(p2 * promo.discountY2 / 100);
-      const f2 = p2 - s2;
-      msg += `2️⃣ Gói 2 Năm (${pkgData.year2?.cores || 0} lõi): ${formatVND(f2)} ₫  (Giá gốc: ${formatVND(p2)} ₫ - Giảm ${promo.discountY2}%, Tiết kiệm ${formatVND(s2)} ₫) ⭐(Khuyên dùng)\n`;
+    msg += `👉 GÓI TƯ VẤN ĐƯỢC CHỌN: GÓI ${yearNum} NĂM (${totalCores} LÕI LỌC)\n`;
+    if (subPkgTitle) msg += `${subPkgTitle}\n`;
+    msg += `⭐ ===================================== ⭐\n\n`;
 
-      // Y3
-      const p3 = pkgData.year3?.price || 0;
-      const s3 = Math.round(p3 * promo.discountY3 / 100);
-      const f3 = p3 - s3;
-      msg += `3️⃣ Gói 3 Năm (${pkgData.year3?.cores || 0} lõi): ${formatVND(f3)} ₫  (Giá gốc: ${formatVND(p3)} ₫ - Giảm ${promo.discountY3}%, Tiết kiệm ${formatVND(s3)} ₫)\n`;
-
-      // Y4
-      const p4 = pkgData.year4?.price || 0;
-      const s4 = Math.round(p4 * promo.discountY4 / 100);
-      const f4 = p4 - s4;
-      msg += `4️⃣ Gói 4 Năm (${pkgData.year4?.cores || 0} lõi): ${formatVND(f4)} ₫  (Giá gốc: ${formatVND(p4)} ₫ - Giảm ${promo.discountY4}%, Tiết kiệm ${formatVND(s4)} ₫) 👑(Bảo vệ trọn đời máy)\n\n`;
+    if (isPromo && savePrice > 0) {
+      msg += `💰 BÁO GIÁ ƯU ĐÃI (${promo.programName.toUpperCase()} - ĐÃ BAO GỒM CÔNG THỢ TẬN NHÀ):\n`;
+      msg += `  • Giá gốc niêm yết: ${formatVND(origPrice)} ₫\n`;
+      msg += `  • Khuyến mãi giảm: -${discountPercent}% (Tiết kiệm ngay: ${formatVND(savePrice)} ₫)\n`;
+      msg += `  • GIÁ THANH TOÁN TRỌN GÓI: ${formatVND(finalPrice)} ₫\n`;
+      msg += `  • Chi phí bình quân: ~${formatVND(avgPerYear)} ₫/năm (~${formatVND(avgPerCore)} ₫/lõi thay)\n\n`;
     } else {
-      msg += `BẢNG GIÁ DỊCH VỤ THAY LÕI LỌC TRỌN GÓI (ĐÃ BAO GỒM CÔNG THỢ TẬN NHÀ):\n`;
-      msg += `1️⃣ Gói 1 Năm (${pkgData.year1?.cores || 0} lõi): ${formatVND(pkgData.year1?.price)} ₫\n`;
-      msg += `2️⃣ Gói 2 Năm (${pkgData.year2?.cores || 0} lõi): ${formatVND(pkgData.year2?.price)} ₫  ⭐(Khuyên dùng - Tiết kiệm)\n`;
-      msg += `3️⃣ Gói 3 Năm (${pkgData.year3?.cores || 0} lõi): ${formatVND(pkgData.year3?.price)} ₫\n`;
-      msg += `4️⃣ Gói 4 Năm (${pkgData.year4?.cores || 0} lõi): ${formatVND(pkgData.year4?.price)} ₫  👑(Gói bảo vệ trọn đời máy)\n\n`;
+      msg += `💰 BÁO GIÁ DỊCH VỤ TRỌN GÓI (ĐÃ BAO GỒM CÔNG THỢ TẬN NHÀ):\n`;
+      msg += `  • GIÁ THANH TOÁN: ${formatVND(origPrice)} ₫\n`;
+      msg += `  • Chi phí bình quân: ~${formatVND(avgPerYear)} ₫/năm (~${formatVND(avgPerCore)} ₫/lõi thay)\n\n`;
     }
 
     const cores = getCoresForProduct(product);
     if (cores && cores.length > 0) {
-      msg += `🔩 DANH MỤC LÕI LỌC THAY THẾ (Sheet 'Thời gian thay lõi lọc'):\n`;
-      cores.forEach(c => {
-        msg += `  • Lõi ${c.position || '-'}: ${c.name} (Định kỳ ${c.intervalMonths || '-'} tháng - Mã ĐMX: ${c.code || '-'})\n`;
+      msg += `🔩 CHI TIẾT SỐ LƯỢNG LÕI THAY TRONG GÓI ${yearNum} NĂM (Tổng ${totalCores} lõi):\n`;
+      cores.forEach((c, idx) => {
+        let qty = 0;
+        if (yearNum === 1) qty = c.y1_cumulative || c.y1_count || 0;
+        else if (yearNum === 2) qty = c.y2_cumulative || ((c.y1_count || 0) + (c.y2_count || 0)) || 0;
+        else if (yearNum === 3) qty = c.y3_cumulative || ((c.y1_count || 0) + (c.y2_count || 0) + (c.y3_count || 0)) || 0;
+        else if (yearNum === 4) qty = c.y4_cumulative || c.total_4y || ((c.y1_count || 0) + (c.y2_count || 0) + (c.y3_count || 0) + (c.y4_count || 0)) || 0;
+
+        const posLabel = c.position ? `Lõi số ${c.position}` : `Lõi ${idx + 1}`;
+        msg += `  • ${posLabel}: ${c.name}\n`;
+        msg += `    - Số lượng thay trong ${yearNum} năm: ${qty} cái\n`;
+        msg += `    - Định kỳ: ${c.intervalMonths || '-'} tháng/lần (Mã linh kiện ĐMX: ${c.code || '-'})\n`;
       });
       msg += `\n`;
     }
 
-    msg += `✨ Quyền lợi khách hàng: Cam kết 100% lõi lọc chính hãng, thợ kỹ thuật ĐMX có mặt đúng hẹn, kiểm tra áp lực nước và đo TDS sau khi thay hoàn toàn miễn phí!`;
+    msg += `🎁 QUYỀN LỢI ĐẶC QUYỀN KHI ĐĂNG KÝ GÓI ${yearNum} NĂM:\n`;
+    msg += `  ✓ Miễn phí 100% công thợ Điện Máy Xanh tới nhà phục vụ định kỳ trong suốt ${yearNum} năm (${yearNum * 12} tháng)\n`;
+    msg += `  ✓ Cam kết 100% lõi lọc chính hãng từ ${product.brand}, mới nguyên seal\n`;
+    msg += `  ✓ Kỹ thuật viên đo TDS kiểm tra chất lượng nguồn nước và áp lực bơm sau mỗi lần thay\n`;
+    msg += `  ✓ Hệ thống tự động nhắc lịch trước 7 ngày khi tới kỳ thay lõi, Quý khách không lo quên lịch\n\n`;
+
+    // Comparison with other packages
+    msg += `📋 BẢNG SO SÁNH NHANH CÁC GÓI KỲ HẠN KHÁC:\n`;
+    for (let y = 1; y <= 4; y++) {
+      const pData = pkgData[`year${y}`];
+      if (!pData) continue;
+      const pOrig = pData.price || 0;
+      const pDisc = isPromo ? (promo[`discountY${y}`] || 0) : 0;
+      const pSave = isPromo && pDisc > 0 ? Math.round(pOrig * pDisc / 100) : 0;
+      const pFinal = pOrig - pSave;
+      const marker = y === yearNum ? '👉' : '  ';
+      const selTag = y === yearNum ? ' ⭐ [ĐANG CHỌN]' : '';
+      const promoText = pSave > 0 ? ` (Gốc ${formatVND(pOrig)} ₫, Giảm -${pDisc}%)` : '';
+      msg += `${marker} • Gói ${y} Năm (${pData.cores} lõi): ${formatVND(pFinal)} ₫${promoText}${selTag}\n`;
+    }
+    msg += `\n`;
+
+    msg += `📞 Quý khách cần đặt lịch thay ngay hoặc cần hỗ trợ thêm thông tin, vui lòng phản hồi tin nhắn này để Thợ ĐMX liên hệ phục vụ chu đáo nhất!`;
   } else {
     msg += `⚠️ Lưu ý: Thiết bị này hiện chưa có gói biểu giá chuẩn. Kỹ thuật viên sẽ báo giá lõi thay thế thực tế theo nhu cầu của Quý khách.`;
   }
@@ -1713,6 +2160,40 @@ function setupEventListeners() {
   // Toggle Schedule Accordion
   DOM.btnToggleSchedule.addEventListener('click', () => {
     DOM.scheduleSection.classList.toggle('open');
+  });
+
+  // Package Card Click & Selection Events (Bấm vào gói để làm nổi bật & đổi lịch thay + tin nhắn tư vấn)
+  [1, 2, 3, 4].forEach(yearNum => {
+    const card = document.getElementById(`cardYear${yearNum}`);
+    if (card) {
+      card.addEventListener('click', (e) => {
+        // If clicking on "Chi tiết lõi" toggle button or inside drawer, do not hijack selection
+        if (e.target.closest('.btn-card-toggle-details')) return;
+        selectPackageYear(yearNum, false);
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectPackageYear(yearNum, false);
+        }
+      });
+    }
+
+    const btnSelect = document.getElementById(`btnSelectY${yearNum}`);
+    if (btnSelect) {
+      btnSelect.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectPackageYear(yearNum, false);
+      });
+    }
+  });
+
+  // Package Switcher Pills inside Schedule Section
+  document.querySelectorAll('.sched-pill-btn').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const yearNum = Number(pill.getAttribute('data-year')) || 2;
+      selectPackageYear(yearNum, false);
+    });
   });
 
   // Quote Copy buttons
