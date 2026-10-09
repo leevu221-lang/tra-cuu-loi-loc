@@ -3789,14 +3789,7 @@ body.role-staff .promo-switch-label {
 .footer-designer-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
-  color: var(--text-muted);
-}
-
-.designer-text {
-  font-weight: 500;
-  color: var(--text-light);
+  font-size: 13px;
 }
 
 .designer-pill {
@@ -3808,8 +3801,7 @@ body.role-staff .promo-switch-label {
   color: var(--primary);
   border: 1px solid var(--primary-border);
   border-radius: var(--radius-full);
-  font-size: 13.5px;
-  font-weight: 700;
+  font-size: 13px;
   box-shadow: 0 2px 8px rgba(2, 132, 199, 0.12);
   transition: all var(--transition-fast);
 }
@@ -3819,10 +3811,23 @@ body.role-staff .promo-switch-label {
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.22);
 }
 
-.designer-star {
-  width: 14px;
-  height: 14px;
-  color: #f59e0b;
+.designer-label {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.designer-author {
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 0.2px;
+}
+
+.designer-copy {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 13.5px;
+  opacity: 0.85;
 }
 
 @media (max-width: 640px) {
