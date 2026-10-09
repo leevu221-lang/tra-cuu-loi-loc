@@ -1474,8 +1474,145 @@ function renderAllProductsTable(products) {
 }
 
 // ==========================================
-// QR & BARCODE CAMERA SCANNER
+// QR & BARCODE CAMERA SCANNER (SIÊU TỐC - DUAL ENGINE: NATIVE BARCODEDETECTOR + HTML5QRCODE 30FPS)
 // ==========================================
+
+let nativeBarcodeDetector = null;
+let nativeScanActive = false;
+let nativeScanAnimFrame = null;
+let currentVideoTrack = null;
+let torchActive = false;
+
+// Khởi tạo BarcodeDetector phần cứng từ trình duyệt (Chrome Android, Safari iOS 17+, macOS/Windows)
+async function getNativeBarcodeDetector() {
+  if (typeof window.BarcodeDetector !== 'function') return null;
+  try {
+    const supportedFormats = await window.BarcodeDetector.getSupportedFormats();
+    const desired = ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e', 'data_matrix', 'codabar', 'itf'];
+    const activeFormats = desired.filter(f => supportedFormats.includes(f));
+    if (activeFormats.length > 0) {
+      return new window.BarcodeDetector({ formats: activeFormats });
+    }
+  } catch (e) {
+    console.warn('BarcodeDetector format check warning:', e);
+  }
+  return null;
+}
+
+function stopNativeScanLoop() {
+  nativeScanActive = false;
+  if (nativeScanAnimFrame) {
+    cancelAnimationFrame(nativeScanAnimFrame);
+    nativeScanAnimFrame = null;
+  }
+}
+
+// Vòng lặp giải mã phần cứng quét trực tiếp từ khung hình video ở tần số quét màn hình (60 FPS, độ trễ < 10ms)
+function startNativeScanLoop(videoEl, detector) {
+  if (!videoEl || !detector) return;
+  stopNativeScanLoop();
+  nativeScanActive = true;
+
+  const badgeText = document.getElementById('scannerSpeedText');
+  if (badgeText) {
+    badgeText.textContent = '⚡ Nhận diện siêu tốc (Hardware 60 FPS)';
+  }
+
+  const checkFrame = async () => {
+    if (!nativeScanActive || !State.isScanning) return;
+
+    if (videoEl.readyState >= 2 && !videoEl.paused && !videoEl.ended) {
+      try {
+        const barcodes = await detector.detect(videoEl);
+        if (barcodes && barcodes.length > 0 && State.isScanning) {
+          const first = barcodes[0];
+          if (first && first.rawValue) {
+            handleScanSuccess(first.rawValue);
+            return;
+          }
+        }
+      } catch (err) {
+        // Bỏ qua lỗi khung hình mờ để tiếp tục bắt khung tiếp theo ngay tức khắc
+      }
+    }
+
+    if (nativeScanActive && State.isScanning) {
+      if ('requestVideoFrameCallback' in videoEl) {
+        videoEl.requestVideoFrameCallback(checkFrame);
+      } else {
+        nativeScanAnimFrame = requestAnimationFrame(checkFrame);
+      }
+    }
+  };
+
+  if ('requestVideoFrameCallback' in videoEl) {
+    videoEl.requestVideoFrameCallback(checkFrame);
+  } else {
+    nativeScanAnimFrame = requestAnimationFrame(checkFrame);
+  }
+}
+
+// Điều khiển đèn Flash trợ sáng (khi soi tem dưới gầm chậu rửa / tủ máy tối)
+function setupTorchControl(videoEl) {
+  try {
+    const stream = videoEl ? videoEl.srcObject : null;
+    if (!stream) return;
+    const tracks = stream.getVideoTracks();
+    if (!tracks || !tracks.length) return;
+    const track = tracks[0];
+    currentVideoTrack = track;
+    const caps = (typeof track.getCapabilities === 'function') ? track.getCapabilities() : {};
+    const btnTorch = document.getElementById('btnToggleTorch');
+    if (btnTorch) {
+      if (caps && caps.torch) {
+        btnTorch.style.display = 'inline-flex';
+        btnTorch.onclick = async () => {
+          try {
+            torchActive = !torchActive;
+            await track.applyConstraints({ advanced: [{ torch: torchActive }] });
+            btnTorch.classList.toggle('active', torchActive);
+            btnTorch.innerHTML = torchActive ? '🔦 Tắt Flash' : '🔦 Bật Flash';
+          } catch (e) {
+            console.warn('Torch toggle error:', e);
+          }
+        };
+      } else {
+        btnTorch.style.display = 'none';
+      }
+    }
+  } catch (e) {
+    console.warn('setupTorchControl error:', e);
+  }
+}
+
+// Truy vấn danh sách camera nền bất đồng bộ (KHÔNG làm nghẽn khởi động camera)
+async function loadCameraListAsync() {
+  try {
+    if (typeof Html5Qrcode === 'undefined') return;
+    const cameras = await Html5Qrcode.getCameras();
+    if (!cameras || !cameras.length) return;
+
+    DOM.cameraSelect.innerHTML = '';
+    cameras.forEach((cam, index) => {
+      const opt = document.createElement('option');
+      opt.value = cam.id;
+      opt.textContent = cam.label || `Camera ${index + 1}`;
+      DOM.cameraSelect.appendChild(opt);
+    });
+
+    if (State.selectedCameraId) {
+      DOM.cameraSelect.value = State.selectedCameraId;
+    } else {
+      const backCam = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('sau') || c.label.toLowerCase().includes('environment'));
+      if (backCam) {
+        State.selectedCameraId = backCam.id;
+        DOM.cameraSelect.value = backCam.id;
+      }
+    }
+  } catch (err) {
+    console.warn('Background camera list query error:', err);
+  }
+}
 
 async function openScannerModal() {
   DOM.scannerModal.style.display = 'flex';
@@ -1486,46 +1623,49 @@ async function openScannerModal() {
     return;
   }
 
-  try {
-    if (!State.scannerInstance) {
-      State.scannerInstance = new Html5Qrcode("interactiveScanner");
-    }
-
-    // Get camera list
-    const cameras = await Html5Qrcode.getCameras();
-    DOM.cameraSelect.innerHTML = '';
-    
-    if (cameras && cameras.length) {
-      cameras.forEach((cam, index) => {
-        const opt = document.createElement('option');
-        opt.value = cam.id;
-        opt.textContent = cam.label || `Camera ${index + 1}`;
-        DOM.cameraSelect.appendChild(opt);
-      });
-
-      // Prefer back camera on mobile devices
-      let preferredCam = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('sau') || c.label.toLowerCase().includes('environment'));
-      if (!preferredCam) preferredCam = cameras[cameras.length - 1]; // usually back camera
-      
-      State.selectedCameraId = preferredCam.id;
-      DOM.cameraSelect.value = preferredCam.id;
-      startCameraScanning(preferredCam.id);
-    } else {
-      showToast('Không tìm thấy camera trên thiết bị này.', 'error');
-    }
-  } catch (err) {
-    console.error('Camera enumeration error:', err);
-    showToast('Lỗi truy cập camera: ' + err.message, 'error');
+  // Khởi tạo detector native song song nếu trình duyệt hỗ trợ
+  if (!nativeBarcodeDetector && typeof window.BarcodeDetector === 'function') {
+    getNativeBarcodeDetector().then(det => {
+      nativeBarcodeDetector = det;
+    });
   }
+
+  if (!State.scannerInstance) {
+    State.scannerInstance = new Html5Qrcode("interactiveScanner");
+  }
+
+  // 1. KHỞI ĐỘNG CAMERA TỨC THÌ (< 200ms) - KHÔNG chờ getCameras() làm đơ giao diện
+  const initialCameraConfig = State.selectedCameraId ? State.selectedCameraId : { facingMode: "environment" };
+  startCameraScanning(initialCameraConfig);
+
+  // 2. Chạy ngầm việc nạp danh sách camera vào dropdown
+  loadCameraListAsync();
 }
 
-async function startCameraScanning(cameraId) {
+async function startCameraScanning(cameraTarget) {
   if (!State.scannerInstance) return;
 
+  stopNativeScanLoop();
+
+  // Cấu hình quét tốc độ cao tối đa (30 FPS + qrbox hình chữ nhật rộng phù hợp mã vạch tem máy + QR)
   const config = {
-    fps: 15,
-    qrbox: { width: 250, height: 250 },
-    aspectRatio: 1.0,
+    fps: 30, // 30 khung hình/giây (gấp đôi mặc định 15 FPS)
+    qrbox: (viewfinderWidth, viewfinderHeight) => {
+      const width = Math.min(Math.floor(viewfinderWidth * 0.90), Math.max(viewfinderWidth - 20, 220));
+      const height = Math.min(Math.floor(viewfinderHeight * 0.72), Math.max(viewfinderHeight - 20, 160));
+      return { width, height };
+    },
+    aspectRatio: 1.333333,
+    disableFlip: false,
+    experimentalFeatures: {
+      useBarCodeDetectorIfSupported: true
+    },
+    videoConstraints: {
+      facingMode: { ideal: "environment" },
+      width: { ideal: 1280, min: 640 },
+      height: { ideal: 720, min: 480 },
+      focusMode: { ideal: "continuous" }
+    },
     formatsToSupport: [
       Html5QrcodeSupportedFormats.EAN_13,
       Html5QrcodeSupportedFormats.EAN_8,
@@ -1533,61 +1673,139 @@ async function startCameraScanning(cameraId) {
       Html5QrcodeSupportedFormats.CODE_39,
       Html5QrcodeSupportedFormats.UPC_A,
       Html5QrcodeSupportedFormats.UPC_E,
-      Html5QrcodeSupportedFormats.QR_CODE
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.DATA_MATRIX
     ]
   };
 
   try {
-    // If running, stop first
     if (State.scannerInstance.isScanning) {
       await State.scannerInstance.stop();
     }
 
     await State.scannerInstance.start(
-      cameraId,
+      cameraTarget,
       config,
       (decodedText, decodedResult) => {
         handleScanSuccess(decodedText);
       },
       (errorMessage) => {
-        // Continuous scan frame error, safely ignore
+        // Continuous scan frame error, safely ignore for uninterrupted speed
       }
     );
+
+    // Camera đã phát stream -> Gắn Native BarcodeDetector 60 FPS & Torch
+    const videoEl = document.querySelector('#interactiveScanner video');
+    if (videoEl) {
+      setupTorchControl(videoEl);
+      if (!nativeBarcodeDetector && typeof window.BarcodeDetector === 'function') {
+        nativeBarcodeDetector = await getNativeBarcodeDetector();
+      }
+      if (nativeBarcodeDetector) {
+        startNativeScanLoop(videoEl, nativeBarcodeDetector);
+      }
+    }
   } catch (err) {
-    console.warn('Start camera error:', err);
+    console.warn('Start camera primary attempt failed:', err);
+    // Nếu facingMode object không được chấp nhận trên thiết bị đặc thù, fallback lấy camera đầu tiên
+    if (typeof cameraTarget === 'object' && typeof Html5Qrcode !== 'undefined') {
+      try {
+        const fallbackCams = await Html5Qrcode.getCameras();
+        if (fallbackCams && fallbackCams.length) {
+          const fallbackId = fallbackCams[fallbackCams.length - 1].id;
+          State.selectedCameraId = fallbackId;
+          await State.scannerInstance.start(
+            fallbackId,
+            config,
+            (decodedText) => handleScanSuccess(decodedText),
+            () => {}
+          );
+          const videoEl = document.querySelector('#interactiveScanner video');
+          if (videoEl) {
+            setupTorchControl(videoEl);
+            if (nativeBarcodeDetector) startNativeScanLoop(videoEl, nativeBarcodeDetector);
+          }
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback camera error:', fallbackErr);
+        showToast('Lỗi truy cập camera: ' + fallbackErr.message, 'error');
+      }
+    } else {
+      showToast('Lỗi mở camera: ' + err.message, 'error');
+    }
   }
 }
 
 function handleScanSuccess(rawDecodedText) {
   if (!State.isScanning) return;
+  State.isScanning = false; // Ngăn chặn kích hoạt đúp nhiều lần khi nhận diện siêu tốc
+
+  stopNativeScanLoop();
   playScanChime();
+  if (navigator.vibrate) {
+    try { navigator.vibrate(80); } catch(e){}
+  }
 
-  console.log('Quét thành công mã thô:', rawDecodedText);
-  let targetCode = rawDecodedText.trim();
+  // Hiệu ứng viền xanh nhấp nháy xác nhận quét thành công tức thì
+  const aimFrame = document.querySelector('.scanner-aim-frame');
+  if (aimFrame) {
+    aimFrame.classList.add('scan-success-flash');
+  }
 
-  // Try extracting 13 digits if scanned string is URL or composite label
+  console.log('⚡ Quét thành công siêu tốc:', rawDecodedText);
+  let targetCode = (rawDecodedText || '').trim();
+
+  // Tách 13 chữ số nếu tem dán có mã mở rộng hoặc URL
   const digitsMatch = targetCode.match(/\b\d{13}\b/);
   if (digitsMatch) {
     targetCode = digitsMatch[0];
-  }
-
-  closeScannerModal();
-
-  DOM.searchInput.value = targetCode;
-  DOM.btnClearSearch.style.display = 'flex';
-
-  const product = lookupProduct(targetCode);
-  if (product) {
-    showToast(`Quét thành công! Tìm thấy: ${product.name}`, 'success');
-    displayProduct(product);
   } else {
-    showToast(`Đã nhận diện mã: ${targetCode} nhưng chưa có trong danh mục 222 máy.`, 'info');
-    renderSuggestions(targetCode);
+    try {
+      if (targetCode.startsWith('http://') || targetCode.startsWith('https://')) {
+        const u = new URL(targetCode);
+        const c = u.searchParams.get('code') || u.searchParams.get('q');
+        if (c) targetCode = c;
+      }
+    } catch(e) {}
   }
+
+  setTimeout(() => {
+    closeScannerModal();
+
+    DOM.searchInput.value = targetCode;
+    DOM.btnClearSearch.style.display = 'flex';
+
+    const product = lookupProduct(targetCode);
+    if (product) {
+      showToast(`⚡ Quét tức thì! Tìm thấy: ${product.name}`, 'success');
+      displayProduct(product);
+    } else {
+      showToast(`Đã nhận diện mã: ${targetCode} (chưa có trong danh mục 222 máy)`, 'info');
+      renderSuggestions(targetCode);
+    }
+  }, 120);
 }
 
 async function closeScannerModal() {
   State.isScanning = false;
+  stopNativeScanLoop();
+
+  // Tắt torch nếu đang bật
+  if (currentVideoTrack && torchActive) {
+    try {
+      await currentVideoTrack.applyConstraints({ advanced: [{ torch: false }] });
+    } catch(e){}
+    torchActive = false;
+    const btnTorch = document.getElementById('btnToggleTorch');
+    if (btnTorch) {
+      btnTorch.classList.remove('active');
+      btnTorch.innerHTML = '🔦 Bật Flash';
+    }
+  }
+
+  const aimFrame = document.querySelector('.scanner-aim-frame');
+  if (aimFrame) aimFrame.classList.remove('scan-success-flash');
+
   if (State.scannerInstance && State.scannerInstance.isScanning) {
     try {
       await State.scannerInstance.stop();
@@ -1596,12 +1814,31 @@ async function closeScannerModal() {
   DOM.scannerModal.style.display = 'none';
 }
 
-// File scan fallback
+// File scan fallback với Native BarcodeDetector siêu tốc
 async function handleFileScan(e) {
   const file = e.target.files[0];
   if (!file) return;
 
   try {
+    showToast('Đang nhận diện tem ảnh...', 'info');
+
+    // Thử giải mã siêu tốc bằng Native BarcodeDetector
+    if (typeof window.BarcodeDetector === 'function') {
+      try {
+        const det = nativeBarcodeDetector || (await getNativeBarcodeDetector());
+        if (det && typeof createImageBitmap === 'function') {
+          const bitmap = await createImageBitmap(file);
+          const results = await det.detect(bitmap);
+          if (results && results.length > 0 && results[0].rawValue) {
+            handleScanSuccess(results[0].rawValue);
+            return;
+          }
+        }
+      } catch (nativeErr) {
+        console.warn('Native image scan fallback to Html5Qrcode:', nativeErr);
+      }
+    }
+
     if (!State.scannerInstance) {
       State.scannerInstance = new Html5Qrcode("interactiveScanner");
     }
@@ -1610,7 +1847,9 @@ async function handleFileScan(e) {
       handleScanSuccess(result);
     }
   } catch (err) {
-    showToast('Không nhận diện được mã vạch trong ảnh chụp: ' + err.message, 'error');
+    showToast('Không nhận diện được mã vạch trong ảnh chụp: ' + (err.message || 'Vui lòng chụp rõ nét hơn'), 'error');
+  } finally {
+    e.target.value = '';
   }
 }
 

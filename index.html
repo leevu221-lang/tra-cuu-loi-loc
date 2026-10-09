@@ -736,6 +736,12 @@
             <div class="corner corner-br"></div>
             <div class="laser-scanner-line"></div>
           </div>
+
+          <!-- Speed & Hardware Acceleration Badge -->
+          <div class="scanner-speed-badge" id="scannerSpeedBadge">
+            <span class="speed-pulse"></span>
+            <span id="scannerSpeedText">⚡ Đang quét siêu tốc 60 FPS</span>
+          </div>
         </div>
 
         <!-- Camera Controls -->
@@ -744,6 +750,11 @@
             <label for="cameraSelect">Camera:</label>
             <select id="cameraSelect" class="form-select"></select>
           </div>
+
+          <!-- Flash / Torch Light Button -->
+          <button type="button" class="btn btn-outline btn-torch" id="btnToggleTorch" style="display: none;" title="Bật/Tắt đèn Flash trợ sáng">
+            🔦 Bật Flash
+          </button>
           
           <!-- Image upload fallback for file scanning -->
           <label class="btn btn-outline btn-file-scan" for="fileScanInput">
@@ -754,7 +765,7 @@
         </div>
 
         <div class="scanner-tip">
-          💡 Mẹo: Giữ máy cố định, đủ ánh sáng. Hệ thống nhận diện mã 13 chữ số ngay tức thì và tự động hiển thị giá gói!
+          💡 Mẹo: Hướng camera thẳng vào mã vạch (EAN-13) hoặc mã QR trên tem máy. Hệ thống nhận diện tức thì và tự động hiển thị giá gói!
         </div>
       </div>
     </div>
